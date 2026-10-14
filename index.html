@@ -39,7 +39,7 @@ body {
 :focus-visible { outline: 2px solid var(--plum); outline-offset: 2px; }
 a { color: inherit; }
 
-/* ───────── shell: ink sidebar + paper main (same as the homeworks) ───────── */
+
 .shell { display: grid; grid-template-columns: 340px minmax(0, 1fr); min-height: 100vh; }
 
 .side {
@@ -70,7 +70,7 @@ a { color: inherit; }
 .nav a:hover { background: var(--paper); color: var(--ink); border-left-color: var(--plum); }
 .nav span { color: rgba(246, 247, 242, 0.35); }
 
-/* ───────── main column ───────── */
+
 .wrap { width: 100%; max-width: 1000px; padding: 2rem 2.2rem 4rem; display: flex; flex-direction: column; gap: 1.25rem; }
 
 .hw {
@@ -126,13 +126,7 @@ footer { font-size: 0.8rem; color: var(--muted); margin-top: 0.5rem; }
 </div>
 
 <script>
-// ===================================================================
-//  EDIT HERE — everything on the page comes from these two lists.
-//  To add a new homework: copy one block in HOMEWORKS, change the
-//  values and put the file name (exactly as in the repository,
-//  capital letters included) in "file".
-//  A homework with file: '' is shown as "coming soon".
-// ===================================================================
+
 const SITE = {
   badge: 'A.Y. 2026/27',
   course: 'Statistics Homeworks',
@@ -158,10 +152,8 @@ const HOMEWORKS = [
     description: 'The Ethereum wallet pipeline step by step: mnemonic phrase, seed, key derivation, public key, address and checksum, with the statistical properties of each step and the historical context of the standards.',
     topics: ['BIP-39', 'BIP-32', 'BIP-44', 'secp256k1', 'Keccak-256', 'EIP-55']
   },
-  // { number: 3, title: '...', file: 'Homework3.html', date: '', description: '...', topics: ['...'] },
+ 
 ];
-// ===================================================================
-
 const $ = id => document.getElementById(id);
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const pad = n => String(n).padStart(2, '0');
