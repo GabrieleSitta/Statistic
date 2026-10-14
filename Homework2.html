@@ -19,7 +19,6 @@
   --green: #047857;
   --marker: #F3E37A;
   --line: rgba(27, 35, 64, 0.16);
-  /* legacy names used by the scripts, mapped onto the new palette */
   --accent-orange: #8A2C5C;
   --accent-orange-hover: #A8406F;
   --accent-green: #047857;
@@ -46,7 +45,6 @@ body {
 
 :focus-visible { outline: 2px solid var(--plum); outline-offset: 2px; }
 
-/* ───────── shell: ink sidebar + paper main ───────── */
 .shell { display: grid; grid-template-columns: 340px minmax(0, 1fr); min-height: 100vh; }
 
 .side {
@@ -87,7 +85,7 @@ body {
 .tab.on { background: var(--paper); color: var(--ink); border-left-color: var(--plum); }
 .tab-theory { color: var(--plum-light); }
 
-/* ───────── main column ───────── */
+
 .wrap { width: 100%; max-width: 1080px; padding: 2rem 2.2rem 4rem; display: flex; flex-direction: column; gap: 1.25rem; }
 
 .panel { display: none; flex-direction: column; gap: 1.25rem; }
@@ -134,7 +132,6 @@ pre.console {
 .ok { color: #6EE7B7; }
 .dim { color: #9AA5C4; }
 
-/* the public key reads like a highlighted line in a notebook */
 .key {
   display: inline-block; font-family: var(--mono); font-size: 2rem; font-weight: 700; color: var(--ink);
   background: linear-gradient(transparent 52%, var(--marker) 52%, var(--marker) 92%, transparent 92%);
@@ -180,7 +177,7 @@ canvas { width: 100%; display: block; background: #fff; border: 1px solid var(--
 .disc p, .disc li { font-size: 0.92rem; margin: 0.45rem 0; max-width: 78ch; }
 .disc ul { padding-left: 1.2rem; }
 
-/* theory modal */
+
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(27, 35, 64, 0.45); z-index: 100;
   display: flex; align-items: center; justify-content: center;
@@ -212,14 +209,14 @@ canvas { width: 100%; display: block; background: #fff; border: 1px solid var(--
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
-/* ───────── Homework 2 additions ───────── */
+
 :root {
-  --c-gen: #B7791F;   /* key generation */
-  --c-der: #8A2C5C;   /* key derivation */
-  --c-pk: #047857;    /* public-key cryptography */
-  --c-hash: #2B59C3;  /* hashing */
-  --c-chk: #C2410C;   /* checksum */
-  --c-enc: #5C6478;   /* encoding */
+  --c-gen: #B7791F;   
+  --c-der: #8A2C5C;   
+  --c-pk: #047857;    
+  --c-hash: #2B59C3;  
+  --c-chk: #C2410C;   
+  --c-enc: #5C6478;  
 }
 .side textarea {
   width: 100%; min-height: 70px; resize: vertical;
@@ -237,7 +234,7 @@ canvas { width: 100%; display: block; background: #fff; border: 1px solid var(--
 #mnStatus { font-size: 0.78rem; }
 #mnStatus.okc { color: #6EE7B7; } #mnStatus.errc { color: #FCA5A5; }
 
-/* pipeline chain in the sidebar */
+
 .chain { list-style: none; position: relative; margin: 0.2rem 0 0; }
 .chain li.node { position: relative; padding: 0.15rem 0 0.15rem 1.3rem; cursor: pointer; }
 .chain li.node::before { content: ''; position: absolute; left: 0.2rem; top: 0.55rem; width: 9px; height: 9px; border-radius: 50%; background: var(--paper); }
@@ -249,7 +246,7 @@ canvas { width: 100%; display: block; background: #fff; border: 1px solid var(--
 .chain li.arrow::after { content: '▼'; position: absolute; left: 0.27rem; bottom: -0.35rem; font-size: 0.55rem; }
 .chain.dead { opacity: 0.35; }
 
-/* category chips and legend */
+
 .chip { display: inline-block; font-size: 0.72rem; font-weight: 700; border: 1px solid currentColor; border-radius: 4px; padding: 0 0.4rem; margin: 0 0.25rem 0.25rem 0; white-space: nowrap; }
 .chip.gen { color: var(--c-gen); } .chip.der { color: var(--c-der); } .chip.pk { color: var(--c-pk); }
 .chip.hash { color: var(--c-hash); } .chip.chk { color: var(--c-chk); } .chip.enc { color: var(--c-enc); }
@@ -270,7 +267,7 @@ canvas { width: 100%; display: block; background: #fff; border: 1px solid var(--
 .cs { color: var(--c-chk); font-weight: 700; }
 .addr-big { font-family: var(--mono); font-size: 1.35rem; font-weight: 700; word-break: break-all; }
 
-/* statistics */
+
 .strip { display: grid; grid-template-columns: repeat(40, 1fr); gap: 2px; margin: 0.5rem 0; }
 .strip div { height: 16px; border-radius: 2px; }
 .scale { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--muted); }
@@ -278,7 +275,7 @@ canvas { width: 100%; display: block; background: #fff; border: 1px solid var(--
 .hcanvas { height: 190px; }
 progress { width: 220px; height: 10px; accent-color: var(--plum); }
 
-/* timeline */
+
 .timeline { list-style: none; position: relative; margin-left: 4.2rem; border-left: 2px solid var(--ink); }
 .timeline li { position: relative; padding: 0 0 1rem 1.2rem; max-width: 78ch; }
 .timeline li::before { content: ''; position: absolute; left: -7px; top: 0.45rem; width: 12px; height: 12px; border-radius: 50%; background: var(--ink); }
@@ -303,7 +300,7 @@ progress { width: 220px; height: 10px; accent-color: var(--plum); }
 <body>
 <div class="shell">
 
-  <!-- Sidebar: inputs + the pipeline from phrase to address -->
+  
   <aside class="side">
     <div class="brand">
       <span class="badge">HMWK 2</span>
@@ -348,7 +345,7 @@ progress { width: 220px; height: 10px; accent-color: var(--plum); }
 
   <main class="wrap">
 
-  <!-- ============ 1 · PIPELINE ============ -->
+ 
   <section class="panel on" id="p-pipe">
     <div class="card">
       <h2>What happens when a wallet creates an address</h2>
@@ -404,7 +401,7 @@ progress { width: 220px; height: 10px; accent-color: var(--plum); }
     </div>
   </section>
 
-  <!-- ============ 2 · STANDARDS ============ -->
+  
   <section class="panel" id="p-std">
     <div class="card disc">
       <h2>The six pieces and what each one is for</h2>
@@ -456,7 +453,7 @@ progress { width: 220px; height: 10px; accent-color: var(--plum); }
     </div>
   </section>
 
-  <!-- ============ 3 · STATISTICS ============ -->
+  
   <section class="panel" id="p-stats">
     <div class="card">
       <h2>Statistical properties of the pipeline</h2>
@@ -530,7 +527,7 @@ progress { width: 220px; height: 10px; accent-color: var(--plum); }
     </div>
   </section>
 
-  <!-- ============ 4 · HISTORY ============ -->
+ 
   <section class="panel" id="p-hist">
     <div class="card">
       <h2>How we got here</h2>
@@ -572,7 +569,7 @@ progress { width: 220px; height: 10px; accent-color: var(--plum); }
     </div>
   </section>
 
-  <!-- ============ 5 · DISCUSSION ============ -->
+  
   <section class="panel" id="p-disc">
     <div class="card disc">
       <h2>Five different jobs: generation, derivation, public-key, hashing, checksum, encoding</h2>
@@ -622,7 +619,7 @@ progress { width: 220px; height: 10px; accent-color: var(--plum); }
 <script>
 const WORDS = "abandon ability able about above absent absorb abstract absurd abuse access accident account accuse achieve acid acoustic acquire across act action actor actress actual adapt add addict address adjust admit adult advance advice aerobic affair afford afraid again age agent agree ahead aim air airport aisle alarm album alcohol alert alien all alley allow almost alone alpha already also alter always amateur amazing among amount amused analyst anchor ancient anger angle angry animal ankle announce annual another answer antenna antique anxiety any apart apology appear apple approve april arch arctic area arena argue arm armed armor army around arrange arrest arrive arrow art artefact artist artwork ask aspect assault asset assist assume asthma athlete atom attack attend attitude attract auction audit august aunt author auto autumn average avocado avoid awake aware away awesome awful awkward axis baby bachelor bacon badge bag balance balcony ball bamboo banana banner bar barely bargain barrel base basic basket battle beach bean beauty because become beef before begin behave behind believe below belt bench benefit best betray better between beyond bicycle bid bike bind biology bird birth bitter black blade blame blanket blast bleak bless blind blood blossom blouse blue blur blush board boat body boil bomb bone bonus book boost border boring borrow boss bottom bounce box boy bracket brain brand brass brave bread breeze brick bridge brief bright bring brisk broccoli broken bronze broom brother brown brush bubble buddy budget buffalo build bulb bulk bullet bundle bunker burden burger burst bus business busy butter buyer buzz cabbage cabin cable cactus cage cake call calm camera camp can canal cancel candy cannon canoe canvas canyon capable capital captain car carbon card cargo carpet carry cart case cash casino castle casual cat catalog catch category cattle caught cause caution cave ceiling celery cement census century cereal certain chair chalk champion change chaos chapter charge chase chat cheap check cheese chef cherry chest chicken chief child chimney choice choose chronic chuckle chunk churn cigar cinnamon circle citizen city civil claim clap clarify claw clay clean clerk clever click client cliff climb clinic clip clock clog close cloth cloud clown club clump cluster clutch coach coast coconut code coffee coil coin collect color column combine come comfort comic common company concert conduct confirm congress connect consider control convince cook cool copper copy coral core corn correct cost cotton couch country couple course cousin cover coyote crack cradle craft cram crane crash crater crawl crazy cream credit creek crew cricket crime crisp critic crop cross crouch crowd crucial cruel cruise crumble crunch crush cry crystal cube culture cup cupboard curious current curtain curve cushion custom cute cycle dad damage damp dance danger daring dash daughter dawn day deal debate debris decade december decide decline decorate decrease deer defense define defy degree delay deliver demand demise denial dentist deny depart depend deposit depth deputy derive describe desert design desk despair destroy detail detect develop device devote diagram dial diamond diary dice diesel diet differ digital dignity dilemma dinner dinosaur direct dirt disagree discover disease dish dismiss disorder display distance divert divide divorce dizzy doctor document dog doll dolphin domain donate donkey donor door dose double dove draft dragon drama drastic draw dream dress drift drill drink drip drive drop drum dry duck dumb dune during dust dutch duty dwarf dynamic eager eagle early earn earth easily east easy echo ecology economy edge edit educate effort egg eight either elbow elder electric elegant element elephant elevator elite else embark embody embrace emerge emotion employ empower empty enable enact end endless endorse enemy energy enforce engage engine enhance enjoy enlist enough enrich enroll ensure enter entire entry envelope episode equal equip era erase erode erosion error erupt escape essay essence estate eternal ethics evidence evil evoke evolve exact example excess exchange excite exclude excuse execute exercise exhaust exhibit exile exist exit exotic expand expect expire explain expose express extend extra eye eyebrow fabric face faculty fade faint faith fall false fame family famous fan fancy fantasy farm fashion fat fatal father fatigue fault favorite feature february federal fee feed feel female fence festival fetch fever few fiber fiction field figure file film filter final find fine finger finish fire firm first fiscal fish fit fitness fix flag flame flash flat flavor flee flight flip float flock floor flower fluid flush fly foam focus fog foil fold follow food foot force forest forget fork fortune forum forward fossil foster found fox fragile frame frequent fresh friend fringe frog front frost frown frozen fruit fuel fun funny furnace fury future gadget gain galaxy gallery game gap garage garbage garden garlic garment gas gasp gate gather gauge gaze general genius genre gentle genuine gesture ghost giant gift giggle ginger giraffe girl give glad glance glare glass glide glimpse globe gloom glory glove glow glue goat goddess gold good goose gorilla gospel gossip govern gown grab grace grain grant grape grass gravity great green grid grief grit grocery group grow grunt guard guess guide guilt guitar gun gym habit hair half hammer hamster hand happy harbor hard harsh harvest hat have hawk hazard head health heart heavy hedgehog height hello helmet help hen hero hidden high hill hint hip hire history hobby hockey hold hole holiday hollow home honey hood hope horn horror horse hospital host hotel hour hover hub huge human humble humor hundred hungry hunt hurdle hurry hurt husband hybrid ice icon idea identify idle ignore ill illegal illness image imitate immense immune impact impose improve impulse inch include income increase index indicate indoor industry infant inflict inform inhale inherit initial inject injury inmate inner innocent input inquiry insane insect inside inspire install intact interest into invest invite involve iron island isolate issue item ivory jacket jaguar jar jazz jealous jeans jelly jewel job join joke journey joy judge juice jump jungle junior junk just kangaroo keen keep ketchup key kick kid kidney kind kingdom kiss kit kitchen kite kitten kiwi knee knife knock know lab label labor ladder lady lake lamp language laptop large later latin laugh laundry lava law lawn lawsuit layer lazy leader leaf learn leave lecture left leg legal legend leisure lemon lend length lens leopard lesson letter level liar liberty library license life lift light like limb limit link lion liquid list little live lizard load loan lobster local lock logic lonely long loop lottery loud lounge love loyal lucky luggage lumber lunar lunch luxury lyrics machine mad magic magnet maid mail main major make mammal man manage mandate mango mansion manual maple marble march margin marine market marriage mask mass master match material math matrix matter maximum maze meadow mean measure meat mechanic medal media melody melt member memory mention menu mercy merge merit merry mesh message metal method middle midnight milk million mimic mind minimum minor minute miracle mirror misery miss mistake mix mixed mixture mobile model modify mom moment monitor monkey monster month moon moral more morning mosquito mother motion motor mountain mouse move movie much muffin mule multiply muscle museum mushroom music must mutual myself mystery myth naive name napkin narrow nasty nation nature near neck need negative neglect neither nephew nerve nest net network neutral never news next nice night noble noise nominee noodle normal north nose notable note nothing notice novel now nuclear number nurse nut oak obey object oblige obscure observe obtain obvious occur ocean october odor off offer office often oil okay old olive olympic omit once one onion online only open opera opinion oppose option orange orbit orchard order ordinary organ orient original orphan ostrich other outdoor outer output outside oval oven over own owner oxygen oyster ozone pact paddle page pair palace palm panda panel panic panther paper parade parent park parrot party pass patch path patient patrol pattern pause pave payment peace peanut pear peasant pelican pen penalty pencil people pepper perfect permit person pet phone photo phrase physical piano picnic picture piece pig pigeon pill pilot pink pioneer pipe pistol pitch pizza place planet plastic plate play please pledge pluck plug plunge poem poet point polar pole police pond pony pool popular portion position possible post potato pottery poverty powder power practice praise predict prefer prepare present pretty prevent price pride primary print priority prison private prize problem process produce profit program project promote proof property prosper protect proud provide public pudding pull pulp pulse pumpkin punch pupil puppy purchase purity purpose purse push put puzzle pyramid quality quantum quarter question quick quit quiz quote rabbit raccoon race rack radar radio rail rain raise rally ramp ranch random range rapid rare rate rather raven raw razor ready real reason rebel rebuild recall receive recipe record recycle reduce reflect reform refuse region regret regular reject relax release relief rely remain remember remind remove render renew rent reopen repair repeat replace report require rescue resemble resist resource response result retire retreat return reunion reveal review reward rhythm rib ribbon rice rich ride ridge rifle right rigid ring riot ripple risk ritual rival river road roast robot robust rocket romance roof rookie room rose rotate rough round route royal rubber rude rug rule run runway rural sad saddle sadness safe sail salad salmon salon salt salute same sample sand satisfy satoshi sauce sausage save say scale scan scare scatter scene scheme school science scissors scorpion scout scrap screen script scrub sea search season seat second secret section security seed seek segment select sell seminar senior sense sentence series service session settle setup seven shadow shaft shallow share shed shell sheriff shield shift shine ship shiver shock shoe shoot shop short shoulder shove shrimp shrug shuffle shy sibling sick side siege sight sign silent silk silly silver similar simple since sing siren sister situate six size skate sketch ski skill skin skirt skull slab slam sleep slender slice slide slight slim slogan slot slow slush small smart smile smoke smooth snack snake snap sniff snow soap soccer social sock soda soft solar soldier solid solution solve someone song soon sorry sort soul sound soup source south space spare spatial spawn speak special speed spell spend sphere spice spider spike spin spirit split spoil sponsor spoon sport spot spray spread spring spy square squeeze squirrel stable stadium staff stage stairs stamp stand start state stay steak steel stem step stereo stick still sting stock stomach stone stool story stove strategy street strike strong struggle student stuff stumble style subject submit subway success such sudden suffer sugar suggest suit summer sun sunny sunset super supply supreme sure surface surge surprise surround survey suspect sustain swallow swamp swap swarm swear sweet swift swim swing switch sword symbol symptom syrup system table tackle tag tail talent talk tank tape target task taste tattoo taxi teach team tell ten tenant tennis tent term test text thank that theme then theory there they thing this thought three thrive throw thumb thunder ticket tide tiger tilt timber time tiny tip tired tissue title toast tobacco today toddler toe together toilet token tomato tomorrow tone tongue tonight tool tooth top topic topple torch tornado tortoise toss total tourist toward tower town toy track trade traffic tragic train transfer trap trash travel tray treat tree trend trial tribe trick trigger trim trip trophy trouble truck true truly trumpet trust truth try tube tuition tumble tuna tunnel turkey turn turtle twelve twenty twice twin twist two type typical ugly umbrella unable unaware uncle uncover under undo unfair unfold unhappy uniform unique unit universe unknown unlock until unusual unveil update upgrade uphold upon upper upset urban urge usage use used useful useless usual utility vacant vacuum vague valid valley valve van vanish vapor various vast vault vehicle velvet vendor venture venue verb verify version very vessel veteran viable vibrant vicious victory video view village vintage violin virtual virus visa visit visual vital vivid vocal voice void volcano volume vote voyage wage wagon wait walk wall walnut want warfare warm warrior wash wasp waste water wave way wealth weapon wear weasel weather web wedding weekend weird welcome west wet whale what wheat wheel when where whip whisper wide width wife wild will win window wine wing wink winner winter wire wisdom wise wish witness wolf woman wonder wood wool word work world worry worth wrap wreck wrestle wrist write wrong yard year yellow you young youth zebra zero zone zoo".split(" "); // official BIP-39 English list (2048 words)
 
-// ============ helpers ============
+
 const enc = new TextEncoder();
 const toHex = b => Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
 const fromHex = h => Uint8Array.from(h.match(/../g) || [], x => parseInt(x, 16));
@@ -635,8 +632,7 @@ const bytesToBig = b => BigInt('0x' + (toHex(b) || '0'));
 const bigToBytes = (v, len = 32) => fromHex(v.toString(16).padStart(len * 2, '0'));
 const ser32 = i => new Uint8Array([(i >>> 24) & 255, (i >>> 16) & 255, (i >>> 8) & 255, i & 255]);
 
-// ============ Keccak (the sponge behind SHA-3 and Ethereum's Keccak-256) ============
-// The state is 25 lanes of 64 bits. We use BigInt for the lanes: slower, but easy to read.
+
 const MASK64 = (1n << 64n) - 1n;
 const RC = ['0000000000000001', '0000000000008082', '800000000000808A', '8000000080008000', '000000000000808B', '0000000080000001',
   '8000000080008081', '8000000000008009', '000000000000008A', '0000000000000088', '0000000080008009', '000000008000000A',
@@ -659,7 +655,6 @@ function keccakF(A) { // A[x + 5y], 24 rounds of theta, rho, pi, chi, iota
   }
 }
 
-// padByte = 0x01 for the original Keccak (Ethereum), 0x06 for the NIST SHA-3 standard
 function keccak(data, padByte) {
   const rate = 136; // bytes: 1600 − 2·256 bits of capacity
   const len = Math.floor(data.length / rate + 1) * rate;
@@ -680,7 +675,6 @@ function keccak(data, padByte) {
 const keccak256 = d => keccak(d, 0x01);
 const sha3_256 = d => keccak(d, 0x06);
 
-// ============ SHA-2, HMAC, PBKDF2: built into the browser (WebCrypto) ============
 const sha256 = async d => new Uint8Array(await crypto.subtle.digest('SHA-256', d));
 async function hmacSha512(key, data) {
   const k = await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: 'SHA-512' }, false, ['sign']);
@@ -691,7 +685,6 @@ async function pbkdf2Sha512(password, salt, iterations) {
   return new Uint8Array(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-512', salt, iterations }, k, 512));
 }
 
-// ============ BIP-39: entropy -> words -> seed ============
 const bitsOf = bytes => Array.from(bytes, b => b.toString(2).padStart(8, '0')).join('');
 
 async function entropyToMnemonic(entropy) { // 16 bytes -> 12 words, 32 bytes -> 24 words
@@ -722,7 +715,6 @@ async function mnemonicToSeed(mnemonic, passphrase = '') {
   return pbkdf2Sha512(enc.encode(m), enc.encode(('mnemonic' + passphrase).normalize('NFKD')), 2048);
 }
 
-// ============ secp256k1: y² = x³ + 7 over a 256-bit prime field ============
 const Pp = 2n ** 256n - 2n ** 32n - 977n;
 const Nn = BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141'); // order of G
 const Gpt = { x: BigInt('0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798'),
@@ -733,8 +725,6 @@ function inv(a, m = Pp) { // extended Euclid
   while (r1) { const q = r0 / r1; [r0, r1] = [r1, r0 - q * r1]; [s0, s1] = [s1, s0 - q * s1]; }
   return md(s0, m);
 }
-// Same chord-and-tangent rules as in Homework 1, written in "Jacobian" coordinates (X, Y, Z)
-// so that we only need ONE modular inverse at the end instead of one per step.
 function jDouble([X, Y, Z]) {
   if (Y === 0n || Z === 0n) return [0n, 1n, 0n];
   const YY = md(Y * Y), S = md(4n * X * YY), M = md(3n * X * X);
@@ -758,19 +748,18 @@ function pointMul(k, pt = Gpt) { // double-and-add, exactly like the toy curve
   const zi = inv(R[2]), zi2 = md(zi * zi);
   return { x: md(R[0] * zi2), y: md(R[1] * zi2 * zi) };
 }
-const compressed = pt => concat(new Uint8Array([pt.y & 1n ? 3 : 2]), bigToBytes(pt.x)); // 33 bytes
-const uncompressed64 = pt => concat(bigToBytes(pt.x), bigToBytes(pt.y));                  // 64 bytes (no 0x04 prefix)
+const compressed = pt => concat(new Uint8Array([pt.y & 1n ? 3 : 2]), bigToBytes(pt.x)); 
+const uncompressed64 = pt => concat(bigToBytes(pt.x), bigToBytes(pt.y));                  
 
-// ============ BIP-32 / BIP-44: seed -> tree of keys ============
 const HARD = 0x80000000;
 async function masterKey(seed) {
   const I = await hmacSha512(enc.encode('Bitcoin seed'), seed);
-  return { k: bytesToBig(I.slice(0, 32)), c: I.slice(32) }; // left half = key, right half = chain code
+  return { k: bytesToBig(I.slice(0, 32)), c: I.slice(32) }; 
 }
 async function childKey(parent, index) {
   const data = index >= HARD
-    ? concat(new Uint8Array([0]), bigToBytes(parent.k), ser32(index))   // hardened: uses the PRIVATE key
-    : concat(compressed(pointMul(parent.k)), ser32(index));             // normal: uses the PUBLIC key
+    ? concat(new Uint8Array([0]), bigToBytes(parent.k), ser32(index))   
+    : concat(compressed(pointMul(parent.k)), ser32(index));             
   const I = await hmacSha512(parent.c, data);
   return { k: md(bytesToBig(I.slice(0, 32)) + parent.k, Nn), c: I.slice(32) };
 }
@@ -793,8 +782,7 @@ async function derivePath(seed, path) {
   return steps;
 }
 
-// ============ address + EIP-55 ============
-const pubToAddress = pt => toHex(keccak256(uncompressed64(pt)).slice(12)); // last 20 of 32 bytes, lowercase
+const pubToAddress = pt => toHex(keccak256(uncompressed64(pt)).slice(12)); 
 function toChecksum(addrLower) {
   const a = addrLower.toLowerCase().replace(/^0x/, '');
   const h = toHex(keccak256(enc.encode(a)));
@@ -805,14 +793,12 @@ function toChecksum(addrLower) {
 const checksumOk = addr => toChecksum(addr) === (addr.startsWith('0x') ? addr : '0x' + addr);
 
 
-// ============ page logic ============
 const $ = id => document.getElementById(id);
 const short = (h, a = 8, b = 6) => h.length > a + b + 1 ? h.slice(0, a) + '…' + h.slice(-b) : h;
 const hex64 = v => v.toString(16).padStart(64, '0');
 const pathFor = i => `m/44'/60'/0'/0/${i}`;
 let STATE = null; // results of the last pipeline run
 
-// tabs
 document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t === b));
   document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'p-' + b.dataset.t));
@@ -824,7 +810,6 @@ function openStage(i) {
   $('st-' + i).scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// ---------- sidebar chain ----------
 function drawChain(s) {
   const nodes = [
     ['Mnemonic', s ? short(s.words.join(' '), 18, 10) : '—'],
@@ -845,7 +830,6 @@ function drawChain(s) {
   $('chain').querySelectorAll('li.node').forEach(li => li.onclick = () => openStage(+li.dataset.i));
 }
 
-// ---------- the pipeline ----------
 let runId = 0;
 async function runPipeline() {
   const id = ++runId;
@@ -871,7 +855,6 @@ async function runPipeline() {
 }
 
 function renderStages(s) {
-  // step 0: entropy, words, checksum
   const c = s.check, entBits = c.entropy.length * 8;
   const allBits = Array.from(c.entropy, b => b.toString(2).padStart(8, '0')).join('') + c.checksum;
   const cells = s.words.map((w, i) => {
@@ -886,12 +869,10 @@ function renderStages(s) {
     `<div class="words">${cells}</div>` +
     `<p class="muted">${entBits} + ${c.checksum.length} = ${entBits + c.checksum.length} bits = ${s.words.length} words × 11 bits. The <span class="cs">orange bits</span> in the last word are the checksum.</p>`;
 
-  // step 1: seed
   $('s1').innerHTML =
     `<div class="val"><span class="lbl">PBKDF2-HMAC-SHA512 · password = the words · salt = "mnemonic${s.pass ? ' + passphrase' : ''}" = "mnemonic${escapeHtml(s.pass)}" · 2048 iterations</span>` +
     `${toHex(s.seed)}</div><p class="muted">512-bit seed, computed in ${s.tSeed.toFixed(1)} ms. Without the 2048 repetitions it would be about 2048 times faster to try guesses.</p>`;
 
-  // step 2: BIP-32 path
   const meaning = ['master key (from the seed)', 'purpose = 44 → "this follows BIP-44"', 'coin type = 60 → Ether', 'account = 0', 'change = 0 (always 0 on Ethereum)', `address index = ${s.idx}`];
   const rows = s.steps.map((st, j) => `<tr><td class="m">${st.label}</td><td>${meaning[j]}</td><td class="m">${j === 0 ? '–' : st.index >= HARD ? 'yes' : 'no'}</td><td class="m">${short(hex64(st.key.k), 10, 8)}</td></tr>`).join('');
   $('s2').innerHTML =
@@ -899,20 +880,17 @@ function renderStages(s) {
     `<table style="margin:.5rem 0"><thead><tr><th class="m">level</th><th>meaning</th><th class="m">hardened</th><th class="m">private key</th></tr></thead><tbody>${rows}</tbody></table>` +
     `<div class="val"><span class="lbl">Final private key k (256 bits, must be between 1 and n − 1)</span><span class="mark">${hex64(s.k)}</span></div>`;
 
-  // step 3: public key
   $('s3').innerHTML =
     `<div class="val"><span class="lbl">Q = k · G, x coordinate</span>${hex64(s.Q.x)}</div>` +
     `<div class="val"><span class="lbl">y coordinate</span>${hex64(s.Q.y)}</div>` +
     `<div class="val"><span class="lbl">Compressed form (33 bytes: 02 if y is even, 03 if odd, then x), used inside BIP-32</span>${toHex(compressed(s.Q))}</div>` +
     `<p class="muted">p = 2²⁵⁶ − 2³² − 977 and the order of G is n ≈ 1.16 × 10⁷⁷. In Homework 1 the order was 9.</p>`;
 
-  // step 4: Keccak
   const h = toHex(keccak256(uncompressed64(s.Q)));
   $('s4').innerHTML =
     `<div class="val"><span class="lbl">Keccak-256(x ‖ y), 32 bytes: the grey part is thrown away</span><span class="fade">${h.slice(0, 24)}</span><span class="mark">${h.slice(24)}</span></div>` +
     `<div class="val"><span class="lbl">Address (20 bytes, lowercase hex)</span>0x${s.addr}</div>`;
 
-  // step 5: EIP-55
   const hh = toHex(keccak256(enc.encode(s.addr)));
   let addrHtml = '0x', hashHtml = '', letters = 0;
   for (let i = 0; i < 40; i++) {
@@ -947,7 +925,6 @@ function checkInput() {
 }
 function escapeHtml(t) { return t.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
-// ---------- SHA-256 vs Keccak-256 vs SHA3-256 demo ----------
 async function hashDemo() {
   const d = enc.encode($('hIn').value);
   $('hOut').innerHTML =
@@ -956,9 +933,8 @@ async function hashDemo() {
     `<span class="lbl">SHA3-256, padding byte 0x06 (NIST FIPS 202)</span>${toHex(sha3_256(d))}`;
 }
 
-// ---------- statistics ----------
 let statsDone = false;
-const chiCrit = df => { const t = 2 / (9 * df); return df * Math.pow(1 - t + 1.645 * Math.sqrt(t), 3); }; // 95% quantile (approximation)
+const chiCrit = df => { const t = 2 / (9 * df); return df * Math.pow(1 - t + 1.645 * Math.sqrt(t), 3); }; 
 const pop8 = b => { let c = 0; while (b) { c += b & 1; b >>= 1; } return c; };
 const hamming = (a, b) => a.reduce((s, x, i) => s + pop8(x ^ b[i]), 0);
 const randKey = () => { const b = crypto.getRandomValues(new Uint8Array(32)); return bytesToBig(b) % (Nn - 1n) + 1n; };
@@ -988,7 +964,6 @@ async function runStats() {
   const prog = $('prog'); prog.hidden = false; prog.value = 0; $('runStats').disabled = true;
   const t0 = performance.now();
 
-  // a) BIP-39 checksum on random word lists
   const M = 4000;
   let ok12 = 0, ok24 = 0;
   for (let i = 0; i < M; i++) {
@@ -1000,7 +975,6 @@ async function runStats() {
   $('kMn').innerHTML = kpi([['random 12-word lists tried', M], ['valid (observed, 95% interval)', ci(ok12, M)], ['expected 1/16', '6.25%'],
     ['random 24-word lists tried', M / 2], ['valid (observed)', ci(ok24, M / 2)], ['expected 1/256', '0.39%']]);
 
-  // generate N random wallets
   const hexCount = Array(16).fill(0), ones = Array(160).fill(0), avPub = Array(257).fill(0), avAddr = Array(161).fill(0), letCount = Array(41).fill(0);
   let upper = 0, letTot = 0, typoTried = 0, typoPassed = 0, typoLower = 0;
   for (let w = 0; w < N; w++) {
@@ -1026,7 +1000,6 @@ async function runStats() {
     if (w % 25 === 0) { prog.value = 100 * w / N; await pause(); }
   }
 
-  // b) hex digits
   const totHex = N * 40, eHex = totHex / 16;
   const chiHex = hexCount.reduce((s, o) => s + (o - eHex) ** 2 / eHex, 0), critHex = chiCrit(15);
   const mxH = Math.max(...hexCount);
@@ -1035,32 +1008,28 @@ async function runStats() {
   $('kHex').innerHTML = kpi([['hex digits', totHex], ['expected per digit', eHex.toFixed(1)], ['χ² (df 15)', chiHex.toFixed(2)], ['critical 5%', critHex.toFixed(2)],
     ['verdict', chiHex > critHex ? '<span class="bad">not uniform</span>' : '<span class="good">consistent with uniform</span>']]);
 
-  // c) bits
   const totBits = N * 160, totOnes = ones.reduce((s, o) => s + o, 0), share = totOnes / totBits;
   $('bitSplit').innerHTML = `<div style="width:${(share * 100).toFixed(1)}%;background:var(--plum);color:#fff">1s: ${(share * 100).toFixed(1)}%</div>` +
     `<div style="flex:1;background:#EEF0E8;color:var(--ink)">0s: ${(100 - share * 100).toFixed(1)}%</div>`;
   $('kBits').innerHTML = kpi([['address bits checked', totBits], ['bits equal to 1', totOnes], ['share of 1s', share.toFixed(3)], ['expected', '0.500']]);
 
-  // d) avalanche pub -> hash
   const lo = 100, hi = 156;
   const nAv = avPub.reduce((a, b) => a + b, 0), meanAv = avPub.reduce((s, c, i) => s + c * i, 0) / nAv;
   const sdAv = Math.sqrt(avPub.reduce((s, c, i) => s + c * (i - meanAv) ** 2, 0) / nAv);
   histogram('avCv', avPub.slice(lo, hi + 1), lo, Array.from({ length: hi - lo + 1 }, (_, j) => nAv * binom(256, lo + j, 0.5)), 'changed bits / 256');
   $('kAv').innerHTML = kpi([['mean', meanAv.toFixed(1)], ['ideal', '128'], ['std. dev.', sdAv.toFixed(2)], ['ideal', '8.00'], ['changed share', (meanAv / 256).toFixed(3)]]);
 
-  // e) avalanche private key -> address
   const lo2 = 55, hi2 = 105;
   const nA2 = avAddr.reduce((a, b) => a + b, 0), meanA2 = avAddr.reduce((s, c, i) => s + c * i, 0) / nA2;
   const sdA2 = Math.sqrt(avAddr.reduce((s, c, i) => s + c * (i - meanA2) ** 2, 0) / nA2);
   histogram('av2Cv', avAddr.slice(lo2, hi2 + 1), lo2, Array.from({ length: hi2 - lo2 + 1 }, (_, j) => nA2 * binom(160, lo2 + j, 0.5)), 'changed bits / 160');
   $('kAv2').innerHTML = kpi([['mean', meanA2.toFixed(1)], ['ideal', '80'], ['std. dev.', sdA2.toFixed(2)], ['ideal', '6.32'], ['changed share', (meanA2 / 160).toFixed(3)]]);
 
-  // f) letters per address
   const lo3 = 3, hi3 = 28;
   histogram('letCv', letCount.slice(lo3, hi3 + 1), lo3, Array.from({ length: hi3 - lo3 + 1 }, (_, j) => N * binom(40, lo3 + j, 3 / 8)), 'letters a–f per address');
   $('kLet').innerHTML = kpi([['mean letters', (letTot / N).toFixed(2)], ['expected 40·6/16', '15.00'], ['uppercase share', (upper / letTot).toFixed(3)], ['expected', '0.500']]);
 
-  // g) typos
+  
   $('kTypo').innerHTML = kpi([['typos tried', typoTried], ['passed the checksum', typoPassed], ['detected', (100 * (typoTried - typoPassed) / typoTried).toFixed(2) + '%'],
     ['expected passes', (typoTried * 2 ** -15).toFixed(3)], ['detected without EIP-55', '0%']]);
 
@@ -1068,7 +1037,7 @@ async function runStats() {
   $('statInfo').textContent = `${N} wallets analysed in ${((performance.now() - t0) / 1000).toFixed(1)} s`;
 }
 
-// ---------- events ----------
+
 let timer = null;
 const schedule = () => { clearTimeout(timer); timer = setTimeout(runPipeline, 250); };
 $('mn').oninput = schedule; $('pp').oninput = schedule;
