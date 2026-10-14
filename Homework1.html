@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HMWK 1 — Private Key → Public Key (Toy Elliptic Curve)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper: #F6F7F2;
+  --grid: #E2E6DA;
+  --ink: #1B2340;
+  --ink-soft: #2A3456;
+  --muted: #5C6478;
+  --plum: #8A2C5C;
+  --plum-light: #E7A6C6;
+  --green: #047857;
+  --marker: #F3E37A;
+  --line: rgba(27, 35, 64, 0.16);
+  /* legacy names used by the scripts, mapped onto the new palette */
+  --accent-orange: #8A2C5C;
+  --accent-orange-hover: #A8406F;
+  --accent-green: #047857;
+  --accent-blue: #1d4ed8;
+  --accent-red: #b91c1c;
+  --text-main: #1B2340;
+  --text-muted: #5C6478;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  line-height: 1.55;
+  min-height: 100vh;
+}
+
+:focus-visible { outline: 2px solid var(--plum); outline-offset: 2px; }
+
+/* ───────── shell: ink sidebar + paper main ───────── */
+.shell { display: grid; grid-template-columns: 340px minmax(0, 1fr); min-height: 100vh; }
+
+.side {
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  background: var(--ink); color: var(--paper);
+  padding: 1.6rem 1.4rem 1.4rem;
+  display: flex; flex-direction: column; gap: 1.3rem;
+}
+.brand h1 { font-size: 1.55rem; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em; margin-top: 0.55rem; }
+.brand .eq { font-family: var(--mono); font-size: 0.85rem; color: var(--plum-light); margin-top: 0.35rem; }
+.badge {
+  display: inline-block; font-size: 0.75rem; font-weight: 700;
+  border: 1px solid rgba(246, 247, 242, 0.4); border-radius: 4px; padding: 0.1rem 0.5rem;
+}
+
+.ctl { display: grid; gap: 0.75rem; }
+.ctl > label { display: grid; gap: 0.3rem; font-size: 0.85rem; font-weight: 600; color: rgba(246, 247, 242, 0.75); }
+.ctl select { width: 100%; }
+.stepper { display: grid; grid-template-columns: 2.4rem 1fr 2.4rem; }
+.stepper button { border-radius: 0; background: var(--ink-soft); color: var(--paper); border: 1px solid rgba(246, 247, 242, 0.25); font-size: 1.1rem; padding: 0.3rem; }
+.stepper button:hover { background: #34406A; }
+.stepper button:first-child { border-radius: 6px 0 0 6px; }
+.stepper button:last-child { border-radius: 0 6px 6px 0; }
+.stepper input { width: 100%; border-radius: 0; text-align: center; font-size: 1.05rem; border-left: none; border-right: none; }
+#ctrlInfo { color: rgba(246, 247, 242, 0.6); font-size: 0.78rem; }
+
+.ring { margin: 0; }
+.ring canvas { width: 100%; display: block; background: transparent; border: none; border-radius: 0; }
+.ring figcaption { font-size: 0.8rem; color: rgba(246, 247, 242, 0.7); text-align: center; margin-top: 0.2rem; }
+
+.tabs { display: grid; gap: 0.15rem; margin-top: auto; border-top: 1px solid rgba(246, 247, 242, 0.15); padding-top: 0.9rem; }
+.tab, .tab-theory {
+  text-align: left; background: transparent; color: rgba(246, 247, 242, 0.75);
+  border: none; border-left: 3px solid transparent; border-radius: 0 6px 6px 0;
+  padding: 0.5rem 0.8rem; font-size: 0.95rem; font-weight: 600;
+}
+.tab:hover, .tab-theory:hover { background: rgba(246, 247, 242, 0.06); color: var(--paper); transform: none; }
+.tab.on { background: var(--paper); color: var(--ink); border-left-color: var(--plum); }
+.tab-theory { color: var(--plum-light); }
+
+/* ───────── main column ───────── */
+.wrap { width: 100%; max-width: 1080px; padding: 2rem 2.2rem 4rem; display: flex; flex-direction: column; gap: 1.25rem; }
+
+.panel { display: none; flex-direction: column; gap: 1.25rem; }
+.panel.on { display: flex; }
+
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1.4rem 1.5rem;
+}
+
+h2 { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.01em; color: var(--ink); margin-bottom: 0.8rem; }
+h3 { font-size: 1rem; font-weight: 700; margin: 1rem 0 0.35rem; }
+
+select, input[type=number] {
+  font-family: var(--mono); font-weight: 700;
+  border: 1px solid var(--line); border-radius: 6px;
+  padding: 0.4rem 0.6rem; background: #fff; color: var(--plum);
+}
+.side select, .side input[type=number] { border-color: rgba(246, 247, 242, 0.25); }
+input[type=number] { width: 95px; }
+.stepper input[type=number] { width: 100%; }
+
+button {
+  font: inherit; font-weight: 600; font-size: 0.85rem;
+  border: 1px solid var(--line); background: #fff; color: var(--ink);
+  padding: 0.45rem 0.9rem; border-radius: 6px; cursor: pointer;
+  transition: background 0.15s ease;
+}
+button:hover { background: #F0F2EA; }
+button.pri { background: var(--plum); color: #fff; border-color: var(--plum); }
+button.pri:hover { background: #A8406F; }
+button.go { background: var(--green); color: #fff; border-color: var(--green); }
+button.go:hover { background: #05936A; }
+
+pre.console {
+  font-family: var(--mono); font-size: 0.78rem;
+  background: var(--ink); color: #E8ECF5; border-radius: 6px;
+  padding: 1.2rem; overflow-x: auto; white-space: pre;
+  max-height: 420px; overflow-y: auto;
+}
+.hl { color: var(--marker); }
+.ok { color: #6EE7B7; }
+.dim { color: #9AA5C4; }
+
+/* the public key reads like a highlighted line in a notebook */
+.key {
+  display: inline-block; font-family: var(--mono); font-size: 2rem; font-weight: 700; color: var(--ink);
+  background: linear-gradient(transparent 52%, var(--marker) 52%, var(--marker) 92%, transparent 92%);
+  padding: 0 0.3rem;
+}
+
+.formula {
+  font-family: var(--mono); font-weight: 600; color: var(--ink); font-size: 0.82rem;
+  background: #F0F2EA; border-radius: 4px; padding: 0.3rem 0.6rem;
+}
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+
+table { border-collapse: collapse; width: 100%; font-size: 0.85rem; background: #fff; }
+th { background: #EEF0E8; color: var(--ink); padding: 0.5rem; text-align: left; font-weight: 700; border-bottom: 1px solid var(--line); }
+td { padding: 0.45rem 0.5rem; border-bottom: 1px solid #ECEEE6; vertical-align: top; }
+td.m, th.m { font-family: var(--mono); text-align: center; }
+tr.clickable { cursor: pointer; }
+tr.clickable:hover { background: #F6F7F2; }
+tr.sel { background: #FBF6D3; }
+
+.bars { display: flex; align-items: flex-end; gap: 2px; height: 110px; border-bottom: 2px solid var(--ink); padding-top: 14px; }
+.bc { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-width: 0; }
+.bar { width: 100%; max-width: 18px; background: var(--plum); border-radius: 2px 2px 0 0; min-height: 1px; }
+.bn { font-family: var(--mono); font-size: 0.6rem; color: var(--muted); }
+.bl2 { display: flex; gap: 2px; }
+.bl2 .bn { flex: 1; text-align: center; }
+
+.muted { color: var(--muted); font-size: 0.85rem; }
+.good { color: var(--green); font-weight: 700; }
+.bad { color: var(--accent-red); font-weight: 700; }
+.warn { color: var(--plum); font-weight: 700; }
+
+canvas { width: 100%; display: block; background: #fff; border: 1px solid var(--line); border-radius: 6px; }
+.vtext { font-size: 0.85rem; background: #FBFBF7; border-left: 3px solid var(--plum); padding: 0.9rem 1.1rem; min-height: 110px; font-family: var(--mono); }
+.note { font-size: 0.85rem; background: #FBF6D3; border-left: 3px solid #D9C23A; padding: 0.75rem 1rem; margin-top: 0.7rem; color: var(--ink); }
+.row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+
+.kpi { display: flex; flex-wrap: wrap; gap: 0 1.6rem; }
+.kpi div { border-top: 2px solid var(--ink); padding: 0.4rem 0 0.2rem; font-size: 0.78rem; color: var(--muted); min-width: 110px; }
+.kpi b { display: block; font-family: var(--mono); font-size: 1.05rem; color: var(--ink); }
+
+.disc p, .disc li { font-size: 0.92rem; margin: 0.45rem 0; max-width: 78ch; }
+.disc ul { padding-left: 1.2rem; }
+
+/* theory modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(27, 35, 64, 0.45); z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+}
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+.modal-card {
+  background: var(--paper); border-radius: 8px; border-top: 6px solid var(--plum);
+  width: 90%; max-width: 640px; max-height: 85vh; overflow-y: auto; padding: 1.8rem 2rem;
+  display: flex; flex-direction: column; gap: 1.1rem;
+}
+.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 0.75rem; }
+.modal-title { font-size: 1.3rem; font-weight: 800; color: var(--ink); }
+.btn-close { width: 34px; height: 34px; border-radius: 50%; padding: 0; font-weight: 800; }
+.theory-item { font-size: 0.9rem; line-height: 1.55; color: var(--muted); max-width: 72ch; }
+.theory-item strong { color: var(--ink); }
+
+@media (max-width: 960px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .side { min-width: 0; }
+  .card { padding: 1.1rem 1rem; }
+  .key { font-size: 1.5rem; }
+  table { display: block; overflow-x: auto; }
+  .side { position: static; height: auto; }
+  .ring canvas { max-width: 300px; margin: 0 auto; }
+  .tabs { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-top: 0; }
+  .wrap { padding: 1.2rem 1rem 3rem; }
+  .grid2 { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Sidebar: controls, the cyclic group ⟨G⟩ and navigation -->
+  <aside class="side">
+    <div class="brand">
+      <span class="badge">HMWK 1</span>
+      <h1>Private key → public key</h1>
+      <p class="eq">y² ≡ x³ + 7 (mod 17)</p>
+    </div>
+
+    <div class="ctl">
+      <label>Base point G <select id="gSel"></select></label>
+      <label>Private key k
+        <span class="stepper">
+          <button type="button" id="kMinus" aria-label="Decrease k">−</button>
+          <input type="number" id="kIn" min="1" max="1000000" value="6" aria-label="Private key k">
+          <button type="button" id="kPlus" aria-label="Increase k">+</button>
+        </span>
+      </label>
+      <span id="ctrlInfo"></span>
+    </div>
+
+    <figure class="ring">
+      <canvas id="ring" aria-label="The subgroup generated by G drawn as a ring; the current key is highlighted"></canvas>
+      <figcaption id="ringCap"></figcaption>
+    </figure>
+
+    <nav class="tabs" aria-label="Sections">
+      <button class="tab on" data-t="core">1 · Key generation</button>
+      <button class="tab" data-t="viz">2 · Slow-motion visualiser</button>
+      <button class="tab" data-t="stats">3 · Statistical exploration</button>
+      <button class="tab" data-t="disc">4 · Discussion</button>
+      <button class="tab-theory" onclick="toggleModal(true)">Theory notes</button>
+    </nav>
+  </aside>
+
+  <main class="wrap">
+
+  <!-- Theory modal -->
+  <div class="modal-overlay" id="theoryModal" onclick="if(event.target === this) toggleModal(false)">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">Theory: the ideas behind the app</div>
+        <button class="btn-close" onclick="toggleModal(false)">✕</button>
+      </div>
+      <div class="theory-item">
+        <strong>1. The toy curve y² ≡ x³ + 7 (mod 17).</strong> It is the same equation Ethereum uses (secp256k1), but modulo 17 instead of a 256-bit prime, so every step can be checked by hand. It has 17 points plus a special point at infinity, O.
+      </div>
+      <div class="theory-item">
+        <strong>2. The base point G = (1, 5).</strong> A public starting point that everyone knows. It is on the curve because 5² = 25 ≡ 8 and 1³ + 7 = 8. If we keep adding G to itself, after 9 steps we are back at O: G has order 9.
+      </div>
+      <div class="theory-item">
+        <strong>3. Adding two points.</strong> λ = (y₂ − y₁)/(x₂ − x₁) for two different points, λ = 3x₁²/(2y₁) to double a point. Then x₃ = λ² − x₁ − x₂ and y₃ = λ(x₁ − x₃) − y₁, all mod 17. Dividing mod 17 means multiplying by the inverse: 1/10 ≡ 12, because 10·12 = 120 = 7·17 + 1.
+      </div>
+      <div class="theory-item">
+        <strong>4. Public key Q = k·G.</strong> We add G to itself k times. Double-and-add is the faster way: it doubles at every bit of k and adds G only when the bit is 1.
+      </div>
+      <div class="theory-item">
+        <strong>5. The point at infinity O.</strong> It works like zero: P + O = P. We get it when we add a point to its mirror image (x, −y). Since 9G = O, keys repeat every 9 steps: 15G is the same as 6G.
+      </div>
+      <div class="theory-item">
+        <strong>6. Why it is a one-way function.</strong> Going from k to Q is fast. Going back from Q to k is very hard on the real curve (around 2¹²⁸ operations). On our toy curve we just try k = 1, 2, 3… and find it in at most 9 tries.
+      </div>
+      <div class="theory-item">
+        <strong>7. Why there is no drawn curve mod 17.</strong> Modulo 17 the curve is only a set of separate points, so there is nothing to draw between them. The real-number picture in the visualiser is just an analogy to see the geometry.
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CORE ============ -->
+  <section class="panel on" id="p-core">
+    <div class="card">
+      <h2>Toy Public Key</h2>
+      <div id="keyBox"></div>
+      <p class="muted" style="margin-top:.5rem" id="keyNote"></p>
+    </div>
+    <div class="card">
+      <h2>Step by step: G, 2G, 3G, …, kG (Repeated Point Addition)</h2>
+      <pre class="console" id="naiveOut"></pre>
+    </div>
+    <div class="card">
+      <h2>Faster method: Double-and-Add</h2>
+      <pre class="console" id="daOut"></pre>
+      <p class="muted" id="costNote" style="margin-top:.5rem"></p>
+    </div>
+    <div class="card">
+      <h2>Brute-force the ECDLP (Attacker's View)</h2>
+      <p class="muted">Given only G and Q, try 1G, 2G, 3G… until Q appears.</p>
+      <div class="row" style="margin-top:.5rem"><button class="pri" id="bfBtn">Recover k from Q</button><span id="bfOut" class="formula"></span></div>
+    </div>
+  </section>
+
+  <!-- ============ VIZ ============ -->
+  <section class="panel" id="p-viz">
+    <div class="card">
+      <h2>Geometric walkthrough (finite field: a "line" is a scatter of 17 points)</h2>
+      <div class="row" style="margin-bottom:.6rem">
+        <label class="muted"><b>Method:</b> <select id="vMethod"><option value="da">double-and-add</option><option value="naive">repeated addition</option></select></label>
+        <button id="vPrev">◀ Prev op</button><button class="pri" id="vNext">Next phase ▶</button>
+        <button class="go" id="vPlay">▶ Play</button><button id="vReset">⟲ Reset</button>
+        <label class="muted"><b>Slow-down:</b> <input type="range" id="vSpeed" min="300" max="3000" value="1500" step="100"> <span id="vSpeedLbl">1.5 s/phase</span></label>
+      </div>
+      <div class="grid2">
+        <div>
+          <canvas id="cv"></canvas>
+          <p class="muted" style="margin-top:.4rem">○ curve points · <span style="color:#8A2C5C">●</span> earlier results · <span style="color:#1d4ed8">◉</span> P₁ · <span style="color:#7c3aed">◉</span> P₂ · <span style="color:#0d9488">•</span> points of the line · <span style="color:#b91c1c">◎</span> third intersection −R · <span style="color:#047857">●</span> result R</p>
+        </div>
+        <div>
+          <div class="vtext" id="vText"></div>
+          <h3>Operation list</h3>
+          <div style="max-height:260px;overflow-y:auto">
+            <table><thead><tr><th class="m">#</th><th>Operation</th><th class="m">Result</th></tr></thead><tbody id="vList"></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Same operation over ℝ: y² = x³ + 7 (geometric analogy)</h2>
+      <div class="grid2">
+        <div>
+          <canvas id="rcv"></canvas>
+          <p class="muted" style="margin-top:.4rem">— real curve · <span style="color:#1d4ed8">◉</span> P₁ · <span style="color:#7c3aed">◉</span> P₂ · <span style="color:#0d9488">- -</span> chord / tangent · <span style="color:#b91c1c">◎</span> third intersection −R · <span style="color:#047857">●</span> result R. It follows the same steps as the plot above; P = (1, √8) plays the role of G.</p>
+        </div>
+        <div>
+          <div class="vtext" id="rText"></div>
+          <div class="note">
+            <b>Why is there no curve in the plot above?</b> Modulo 17 the curve is just 17 separate points, so there is nothing to draw between them, and a "line" becomes the scattered teal dots. Here we draw the same rule on the real numbers to see the geometry: the formulas are the same, but these real points are not the 𝔽₁₇ ones.<br><br>
+            It also shows why we work modulo p: on the real curve 11P already has x ≈ 3824, while mod 17 the numbers always stay between 0 and 16.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STATS ============ -->
+  <section class="panel" id="p-stats">
+    <div class="card">
+      <h2>Experiment Settings</h2>
+      <div class="row">
+        <label class="muted"><b>Sample: k = 1 … N, N =</b> <input type="number" id="nIn" min="2" max="5000" value="9"></label>
+        <button id="nOrd">N = order of G</button><button id="n20">N = 20</button><button id="n1000">N = 1000</button>
+        <span class="muted">(uses the base point G chosen above; point at infinity O excluded)</span>
+      </div>
+      <div class="kpi" style="margin-top:.8rem" id="kpis"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card"><h2>Frequency of x coordinates</h2><div class="bars" id="hx"></div><div class="bl2" id="hxl"></div></div>
+      <div class="card"><h2>Frequency of y coordinates</h2><div class="bars" id="hy"></div><div class="bl2" id="hyl"></div></div>
+    </div>
+
+    <div class="card">
+      <h2>Are the coordinates uniform? (χ² test, k = 1 … N, 5% level)</h2>
+      <table><thead><tr><th>Test</th><th class="m">χ²</th><th class="m">df</th><th class="m">critical</th><th class="m">min expected</th><th>Verdict</th></tr></thead><tbody id="chiBody"></tbody></table>
+      <p class="muted" style="margin-top:.5rem">"Uniform over 0…16": every value from 0 to 16 equally likely. "Reachable": only the values that G can actually produce (for x, a value shared by two points counts double).</p>
+      <div class="note" id="sweepNote"></div>
+    </div>
+
+    <div class="card">
+      <h2>Random keys: a fairer test</h2>
+      <div class="row">
+        <label class="muted"><b>M random keys k ∈ [1, n−1] =</b> <input type="number" id="mIn" min="10" max="200000" value="1000"></label>
+        <button class="pri" id="mBtn">Draw a new random sample</button>
+      </div>
+      <table style="margin-top:.7rem"><thead><tr><th>Test (H₀)</th><th class="m">χ²</th><th class="m">df</th><th class="m">critical</th><th class="m">min expected</th><th>Verdict</th></tr></thead><tbody id="rndBody"></tbody></table>
+      <div class="kpi" style="margin-top:.6rem" id="rndKpi"></div>
+      <p class="muted" style="margin-top:.5rem">Every key from 1 to n−1 gives a different point, so if k is chosen at random, Q is random too. This test mostly checks that the random choice of k is fair: it says nothing about how hard it is to recover k from Q.</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card"><h2>Distribution of bits (P[bit = 1], 5 bits coded)</h2><div id="bitsBox"></div><p class="muted">For random bits we would expect 0.50 everywhere. But numbers from 0 to 16 need 5 bits and only 16 = 10000₂ uses the top bit, so even perfectly random values give:</p><p class="muted" id="bitsRef" style="font-family:var(--mono)"></p><p class="muted">So the top bit is almost always 0 because of how we write the numbers, not because of the curve. With the real 256-bit prime this effect practically disappears.</p></div>
+      <div class="card">
+        <h2>Correlation between input k and output</h2>
+        <div class="kpi" id="corr"></div>
+        <div class="grid2" style="margin-top:.6rem"><canvas id="sc1"></canvas><canvas id="sc2"></canvas></div>
+        <p class="muted" id="symNote" style="margin-top:.4rem"></p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Avalanche behaviour: flip 1 bit of k (8-bit inputs 1…255) — ECC vs SHA-256</h2>
+      <table><thead><tr><th class="m">flipped bit</th><th class="m">ECC: mean fraction changed</th><th class="m">SHA-256: mean fraction changed</th><th class="m">Q′ = Q ± 2ⁱ·G holds?</th></tr></thead><tbody id="avBody"></tbody></table>
+      <p class="muted" style="margin-top:.5rem">Ideal avalanche = 0.50. ECC output is 10-bit encoded. Last column checks the predictable algebraic relation.</p>
+      <div class="note"><b>How to read this table.</b> The ECC column is not far from 0.5 only because there are just 8 possible outputs: two different points already differ in about half of their bits. The real difference is the last column: flipping bit i of k always moves Q by exactly 2ⁱ·G, so the change is completely predictable. A hash function must never behave like that.</div>
+      <div class="row" style="margin-top:.5rem"><button id="homBtn">Test homomorphism aG + bG = (a+b)G on 5000 pairs</button><span id="homOut" class="formula"></span></div>
+    </div>
+
+    <div class="card">
+      <h2>Other Base Points (Click a row to use it)</h2>
+      <table><thead><tr><th class="m">G</th><th class="m">order of G</th><th class="m">distinct x</th><th class="m">entropy (bits)</th><th class="m">r(k,x)</th><th class="m">r(k,y)</th></tr></thead><tbody id="baseBody"></tbody></table>
+    </div>
+  </section>
+
+  <!-- ============ DISCUSSION ============ -->
+  <section class="panel" id="p-disc">
+    <div class="card disc">
+      <h2>What the experiments show</h2>
+      <ul>
+        <li><b>The toy curve is tiny.</b> It has 18 points (17 + O) and G = (1,5) only reaches 9 of them. Key 9 gives O and keys repeat every 9, so there are just 8 usable private keys.</li>
+        <li><b>Frequencies.</b> Going through k = 1…8, every point appears exactly once. The coordinates instead are not uniform over 0…16: only 4 values of x appear (each twice, because a point and its mirror (x, −y) share the same x) and 8 values of y.</li>
+        <li><b>χ² test.</b> With k = 1…9 the test is not reliable: we expect less than one observation per value, and the χ² test needs at least about 5. It would even say "uniform" for x, although 13 of the 17 values never appear. Also, k = 1, 2, 3… is not a random sample, so the counts are fixed in advance. That is why we added the test with random keys.</li>
+        <li><b>Bits.</b> The top bit is almost always 0 just because numbers from 0 to 16 are written on 5 bits.</li>
+        <li><b>Correlation.</b> Pearson's r is low, but r only sees straight-line relations. Q still depends completely on k (it repeats every 9 steps and has the mirror symmetry).</li>
+        <li><b>Avalanche.</b> The share of changed bits is close to 0.5 only because the outputs are so few. What really separates ECC from SHA-256 is that the change is predictable: Q′ = Q ± 2ⁱ·G.</li>
+      </ul>
+    </div>
+
+    <div class="card disc">
+      <h2>One-way functions vs. Cryptographic Hash functions</h2>
+      <table>
+        <thead><tr><th>Property</th><th>Cryptographic One-Way Function (ECDLP)</th><th>Cryptographic Hash (SHA-256)</th></tr></thead>
+        <tbody>
+          <tr><td>Deterministic, efficient forward</td><td class="good">Required (O(log k))</td><td class="good">Required</td></tr>
+          <tr><td>Preimage resistance</td><td class="good">Defining property (hard to invert)</td><td class="good">Required</td></tr>
+          <tr><td>Collision resistance</td><td>Not needed: different keys (1…n−1) always give different points</td><td class="good">Required</td></tr>
+          <tr><td>Avalanche criterion</td><td class="bad">Absent by design (predictable changes)</td><td class="good">Design goal (~50% bit flip)</td></tr>
+          <tr><td>Output appearance</td><td>Points satisfy curve equation</td><td class="good">Indistinguishable from random bits</td></tr>
+          <tr><td>Algebraic structure: (a+b)G = aG + bG</td><td class="good">Needed for signatures and key exchange</td><td class="bad">Must not exist</td></tr>
+          <tr><td>Uniform outputs</td><td class="good">Useful: a random k gives a random Q, so Q tells nothing about k</td><td class="good">Required: output looks random</td></tr>
+          <tr><td>Input / output size</td><td>Number below the group order → a point (two coordinates)</td><td>Arbitrary-length input → fixed-length output</td></tr>
+        </tbody>
+      </table>
+      <p class="muted" style="margin-top:.6rem">For a public key what matters is that it is fast to compute, always the same for the same k, and impossible to reverse on a big curve. Avalanche and collision resistance are hash properties. In fact Ethereum applies a hash (Keccak-256) to Q afterwards, to get the address.</p>
+    </div>
+
+    <div class="card disc">
+      <h2>Why these statistical tools (and their limits)</h2>
+      <p><b>Uniformity.</b> Each key from 1 to n−1 gives a different point, so going through all keys we see every point exactly once. Uniformity over the points is therefore guaranteed, we don't need a test to prove it. A test makes sense only when k is chosen at random.</p>
+      <p><b>χ² test.</b> It compares what we observe with what we would expect if the values were uniform: χ² = Σ (observed − expected)² / expected. If χ² is above the critical value, we reject uniformity at the 5% level. Two things must be true for the test to work: we must compare with the right list of possible values (G = (1,5) can only produce x = 1, 2, 5, 12), and we need at least about 5 expected observations per value.</p>
+      <p><b>Entropy.</b> It measures how spread out the values are, in bits (3 bits = 8 equally likely outcomes). Here H(x) = 2 bits and H(y) = 3 bits, because x has only 4 values. High entropy does not mean the function is hard to reverse.</p>
+      <p><b>Pearson correlation.</b> It only detects straight-line relations. Q depends completely on k, but in a "circular" way (mod n), so r stays low.</p>
+      <p><b>Avalanche.</b> A good hash changes about half of the output bits when one input bit changes, in an unpredictable way. Here the change is always Q ± 2ⁱ·G, so it is fully predictable.</p>
+      <p><b>Other base points.</b> The order of G decides how many public keys exist: with order 18, e.g. G = (15,13), we reach all 17 points; with order 2 or 3 only 1 or 2. Real curves use a base point with a huge order.</p>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+const P = 17, A = 0, B = 7;
+const mod = a => ((a % P) + P) % P;
+function powmod(b, e) { let r = 1; b = mod(b); while (e > 0) { if (e & 1) r = (r * b) % P; b = (b * b) % P; e >>= 1; } return r; }
+const inv = a => powmod(a, P - 2);
+const onCurve = pt => pt === null || mod(pt.y * pt.y) === mod(pt.x ** 3 + A * pt.x + B);
+const eq = (p, q) => p === q || (p && q && p.x === q.x && p.y === q.y);
+const neg = p => p ? { x: p.x, y: mod(-p.y) } : null;
+const fmt = p => p ? `(${p.x}, ${p.y})` : 'O';
+
+const ALL_POINTS = (() => { const r = []; for (let x = 0; x < P; x++) for (let y = 0; y < P; y++) if (onCurve({ x, y })) r.push({ x, y }); return r; })();
+
+function add(p, q) {
+  if (!p) return { pt: q, kind: 'inf' };
+  if (!q) return { pt: p, kind: 'inf' };
+  if (p.x === q.x && mod(p.y + q.y) === 0) return { pt: null, kind: 'vertical' };
+  const dbl = p.x === q.x && p.y === q.y;
+  const num = dbl ? mod(3 * p.x * p.x + A) : mod(q.y - p.y);
+  const den = dbl ? mod(2 * p.y) : mod(q.x - p.x);
+  const di = inv(den), lam = mod(num * di);
+  const x3 = mod(lam * lam - p.x - q.x);
+  const yT = mod(lam * (x3 - p.x) + p.y);
+  const y3 = mod(-yT);
+  return { pt: { x: x3, y: y3 }, kind: dbl ? 'double' : 'add', lam, num, den, di, x3, yT, y3 };
+}
+
+function mulNaive(G, k) {
+  const ops = []; let R = G;
+  for (let m = 2; m <= k; m++) { const d = add(R, G); ops.push({ ...d, p1: R, p2: G, m1: m - 1, m2: 1, m3: m }); R = d.pt; }
+  return { pt: k >= 1 ? R : null, ops };
+}
+
+function mulDA(G, k) {
+  const ops = []; if (k < 1) return { pt: null, ops };
+  const bits = k.toString(2); let R = G, m = 1;
+  for (let i = 1; i < bits.length; i++) {
+    let d = add(R, R); ops.push({ ...d, p1: R, p2: R, m1: m, m2: m, m3: 2 * m, bit: bits[i], bitIdx: i }); R = d.pt; m *= 2;
+    if (bits[i] === '1') { d = add(R, G); ops.push({ ...d, p1: R, p2: G, m1: m, m2: 1, m3: m + 1, bit: bits[i], bitIdx: i }); R = d.pt; m += 1; }
+  }
+  return { pt: R, ops, bits };
+}
+const mul = (G, k) => mulDA(G, k).pt;
+function order(G) { let c = G, m = 1; while (c && m < 1000) { c = add(c, G).pt; m++; } return m; }
+
+const mean = a => a.reduce((s, v) => s + v, 0) / (a.length || 1);
+function pearson(a, b) {
+  const ma = mean(a), mb = mean(b); let sab = 0, saa = 0, sbb = 0;
+  for (let i = 0; i < a.length; i++) { const da = a[i] - ma, db = b[i] - mb; sab += da * db; saa += da * da; sbb += db * db; }
+  return saa && sbb ? sab / Math.sqrt(saa * sbb) : 0;
+}
+const entropy = counts => { const t = counts.reduce((s, v) => s + v, 0); return t ? -counts.filter(c => c > 0).reduce((s, c) => s + (c / t) * Math.log2(c / t), 0) : 0; };
+// chi-square test: compares observed and expected counts.
+// weight (optional): e.g. an x shared by two points is expected twice as often
+function chiSq(freq, support, weight) {
+  const w = v => (weight ? weight[v] : 1);
+  const tot = support.reduce((s, v) => s + freq[v], 0), wsum = support.reduce((s, v) => s + w(v), 0);
+  let chi = 0, minE = Infinity;
+  for (const v of support) { const e = tot * w(v) / wsum; minE = Math.min(minE, e); chi += (freq[v] - e) ** 2 / e; }
+  const outside = freq.reduce((s, c, v) => s + (support.includes(v) ? 0 : c), 0);
+  return { chi, df: support.length - 1, outside, minE };
+}
+const chiCrit = df => { if (df < 1) return NaN; const t = 2 / (9 * df); return df * Math.pow(1 - t + 1.645 * Math.sqrt(t), 3); };
+const popcount = n => { let c = 0; while (n) { c += n & 1; n >>>= 1; } return c; };
+
+function analyze(G, N) {
+  const n = order(G), pts = [], ks = []; let cur = null;
+  const freqX = Array(P).fill(0), freqY = Array(P).fill(0), ptCount = new Map();
+  for (let k = 1; k <= N; k++) {
+    cur = add(cur, G).pt; if (!cur) continue;
+    pts.push(cur); ks.push(k); freqX[cur.x]++; freqY[cur.y]++;
+    const key = cur.x * P + cur.y; ptCount.set(key, (ptCount.get(key) || 0) + 1);
+  }
+  const subX = new Set(), subY = new Set(), multX = Array(P).fill(0), multY = Array(P).fill(0); cur = null;
+  for (let k = 1; k < n; k++) { cur = add(cur, G).pt; if (cur) { subX.add(cur.x); subY.add(cur.y); multX[cur.x]++; multY[cur.y]++; } }
+  const all = [...Array(P).keys()];
+  const bitFrac = key => [0, 1, 2, 3, 4].map(j => mean(pts.map(p => (p[key] >> j) & 1)));
+  let sym = 0, symTot = 0;
+  for (let k = 1; k <= N; k++) { const a = mul(G, k), b = mul(G, (n - (k % n)) % n); if (a && b) { symTot++; if (a.x === b.x) sym++; } }
+  return {
+    n, N, samples: pts.length, pts, ks, freqX, freqY, distinctPts: ptCount.size,
+    distinctX: freqX.filter(c => c).length, distinctY: freqY.filter(c => c).length,
+    entPt: entropy([...ptCount.values()]), entX: entropy(freqX), entY: entropy(freqY),
+    chiX17: chiSq(freqX, all), chiXsub: chiSq(freqX, [...subX], multX), chiY17: chiSq(freqY, all), chiYsub: chiSq(freqY, [...subY], multY),
+    bitsX: bitFrac('x'), bitsY: bitFrac('y'),
+    rKX: pearson(ks, pts.map(p => p.x)), rKY: pearson(ks, pts.map(p => p.y)),
+    sym, symTot
+  };
+}
+
+// SHA-256 of the bytes 0…255, computed once with the browser's built-in crypto library
+let SHA = null;
+async function loadHashes() {
+  if (!(window.crypto && crypto.subtle)) return;
+  SHA = [];
+  for (let k = 0; k < 256; k++) SHA[k] = new Uint8Array(await crypto.subtle.digest('SHA-256', new Uint8Array([k])));
+  renderStats();
+}
+
+function avalanche(G) {
+  const enc = Q => Q.x * 32 + Q.y;
+  const rows = [];
+  for (let i = 0; i < 8; i++) {
+    let eccSum = 0, eccN = 0, shaSum = 0, shaN = 0, pred = 0, predN = 0;
+    const T = mul(G, 1 << i);
+    for (let k = 1; k < 256; k++) {
+      const k2 = k ^ (1 << i); if (k2 === 0) continue;
+      const Q = mul(G, k), Q2 = mul(G, k2);
+      if (Q && Q2) {
+        eccSum += popcount(enc(Q) ^ enc(Q2)) / 10; eccN++;
+        const expect = (k & (1 << i)) ? add(Q, neg(T)).pt : add(Q, T).pt;
+        predN++; if (eq(expect, Q2)) pred++;
+      }
+      if (SHA) { let hd = 0; for (let b = 0; b < 32; b++) hd += popcount(SHA[k][b] ^ SHA[k2][b]); shaSum += hd / 256; shaN++; }
+    }
+    rows.push({ bit: i, ecc: eccSum / eccN, sha: shaSum / shaN, pred: pred / predN, n: eccN });
+  }
+  return rows;
+}
+
+const $ = id => document.getElementById(id);
+let G = { x: 1, y: 5 }, K = 6, ORD = 9;
+
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t === b));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'p-' + b.dataset.t));
+  if (b.dataset.t === 'viz') drawViz();
+  if (b.dataset.t === 'stats') renderStats();
+});
+
+ALL_POINTS.forEach((p, i) => { const o = document.createElement('option'); o.value = i; o.textContent = `${fmt(p)}  (order ${order(p)})`; $('gSel').appendChild(o); });$('gSel').value = ALL_POINTS.findIndex(p => p.x === 1 && p.y === 5);
+$('gSel').onchange = () => { G = ALL_POINTS[+$('gSel').value]; refresh(); };
+$('kIn').oninput = () => { K = Math.max(1, Math.min(1000000, parseInt($('kIn').value) || 1)); refresh(); };
+
+function renderCore() {
+  ORD = order(G);
+  $('ctrlInfo').textContent = `G on curve: ${onCurve(G) ? '✓' : '✗'} · order = ${ORD} (keys repeat every ${ORD})`;
+  const Q = mul(G, K), kr = K % ORD;
+  $('keyBox').innerHTML = `<div class="key">${Q ? `Q = ${K}·G = ${fmt(Q)}` : `Q = ${K}·G = O (point at infinity)`}</div>`;
+  $('keyNote').innerHTML = Q
+    ? `<b>TOY PUBLIC KEY</b> for private key k = ${K}. Check: Q lies on curve (${onCurve(Q) ? '✓' : '✗'}).` + (K >= ORD ? ` Since ${ORD}G = O, keys repeat every ${ORD}: this is the same key as k = ${kr}.` : '')
+    : `k = ${K} is a multiple of ${ORD}, so kG = O: this is not a valid private key.`;
+
+  const L = [];
+  L.push(`<span class="dim">curve  y² = x³ + 7 (mod 17)    G = ${fmt(G)}    check: y² = ${mod(G.y * G.y)},  x³+7 = ${mod(G.x ** 3 + 7)}  → on curve</span>`);
+  L.push(`<span class="dim">private key k = ${K}      order of G = ${ORD}</span>\n`);
+  L.push(`  1G = ${fmt(G)}`);
+  const cap = Math.min(K, 200), nv = mulNaive(G, cap);
+  nv.ops.forEach(o => {
+    const how = o.kind === 'double' ? `tangent  λ = (3·${o.p1.x}²)/(2·${o.p1.y}) ≡ ${o.lam}` : o.kind === 'add' ? `chord    λ = (${o.p2.y}−${o.p1.y})/(${o.p2.x}−${o.p1.x}) ≡ ${o.lam}` : o.kind === 'vertical' ? `vertical line: P + (−P)` : 'O + G';
+    L.push(`${String(o.m3).padStart(3)}G = ${(o.m1 + 'G + G').padEnd(8)} = ${fmt(o.pt)}    <span class="dim">${how}</span>`);
+  });
+  if (K > cap) L.push(`<span class="dim">… (capped at ${cap} lines; use double-and-add for larger k)</span>`);
+  L.push(`\n<span class="hl">TOY PUBLIC KEY  Q = ${K}G = ${fmt(Q)}</span>`);
+  $('naiveOut').innerHTML = L.join('\n');
+
+  const da = mulDA(G, K), D = [];
+  D.push(`k = ${K} = ${da.bits}₂      (read left to right: DOUBLE always, ADD G when bit is 1)`);
+  D.push(`start: R = 1G = ${fmt(G)}\n`);
+  da.ops.forEach(o => D.push(`bit ${o.bit}:  ${o.m1 === o.m2 && o.p1 === o.p2 ? 'double' : 'add   '}  ${o.m1}G ${o.m1 === o.m2 && o.p1 === o.p2 ? '+ ' + o.m1 + 'G' : '+ G '} = ${o.m3}G = ${fmt(o.pt)}`));
+  D.push(`\n<span class="hl">Q = ${K}G = ${fmt(da.pt)}</span>   ${eq(da.pt, nv.pt) || K > cap ? '<span class="ok">(matches repeated addition ✓)</span>' : '<span style="color:#f87171">MISMATCH</span>'}`);
+  $('daOut').innerHTML = D.join('\n');
+  const dbl = da.ops.filter(o => o.m1 === o.m2 && o.p1 === o.p2).length, ad = da.ops.length - dbl;
+  $('costNote').innerHTML = `Cost: repeated addition = <b>${K - 1}</b> additions; double-and-add = <b>${dbl}</b> doublings + <b>${ad}</b> additions = <b>${da.ops.length}</b> operations. For a 256-bit key this means about 256 doublings and 128 additions, instead of 2²⁵⁶ additions.`;
+  $('bfOut').textContent = '';
+}
+
+$('bfBtn').onclick = () => {
+  const Q = mul(G, K); if (!Q) { $('bfOut').textContent = `Q = O ⇒ k ≡ 0 (mod ${ORD}): not a valid private key, nothing to search`; return; }
+  const t0 = performance.now(); let c = null, found = 0;
+  for (let i = 1; i <= 100000; i++) { c = add(c, G).pt; if (eq(c, Q)) { found = i; break; } }
+  $('bfOut').textContent = `found k = ${found} after ${found} additions (${(performance.now() - t0).toFixed(2)} ms) — easy here, impossible on the real curve (about 2¹²⁸ steps).` +
+    (found !== K ? ` Your k = ${K} gives the same Q as ${found}, because keys repeat every ${ORD}.` : '');
+};
+
+const cv = $('cv'), cx = cv.getContext('2d');
+let ops = [], opIdx = 0, phase = 0, timer = null, capped = false;
+function buildOps() {
+  if ($('vMethod').value === 'da') { ops = mulDA(G, K).ops; capped = false; }
+  else { capped = K > 60; ops = mulNaive(G, Math.min(K, 60)).ops; }
+  opIdx = 0; phase = 0;
+  $('vList').innerHTML = ops.map((o, i) => `<tr class="clickable" data-i="${i}"><td class="m">${i + 1}</td><td>${o.m1}G + ${o.m2}G</td><td class="m">${o.m3}G = ${fmt(o.pt)}</td></tr>`).join('') || '<tr><td colspan="3">k = 1: Q = G</td></tr>';
+  $('vList').querySelectorAll('tr.clickable').forEach(r => r.onclick = () => { opIdx = +r.dataset.i; phase = 0; drawViz(); });
+}
+
+function geom() {
+  const w = cv.clientWidth, dpr = window.devicePixelRatio || 1;
+  cv.style.height = w + 'px'; cv.width = w * dpr; cv.height = w * dpr; cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const pad = 30, st = (w - 2 * pad) / (P - 1);
+  return { w, X: x => pad + x * st, Y: y => w - pad - y * st };
+}
+
+function dot(g, p, r, fill, stroke, lw) {
+  cx.beginPath(); cx.arc(g.X(p.x), g.Y(p.y), r, 0, 7);
+  if (fill) { cx.fillStyle = fill; cx.fill(); }
+  if (stroke) { cx.strokeStyle = stroke; cx.lineWidth = lw || 2; cx.stroke(); }
+}
+function label(g, p, t, col, dx = 9, dy = -9) {
+  cx.fillStyle = col; cx.font = '700 11px "JetBrains Mono", monospace'; // CSS variables are not valid inside canvas fonts cx.textAlign = 'left'; cx.fillText(t, g.X(p.x) + dx, g.Y(p.y) + dy);
+}
+
+function drawViz() {
+  if (!$('p-viz').classList.contains('on')) return;
+  const g = geom(); cx.clearRect(0, 0, g.w, g.w);
+  cx.font = '10px "JetBrains Mono", monospace'; cx.fillStyle = '#5C6478'; cx.strokeStyle = 'rgba(27,35,64,.08)'; cx.lineWidth = 1;
+  for (let i = 0; i < P; i++) {
+    cx.beginPath(); cx.moveTo(g.X(i), g.Y(0)); cx.lineTo(g.X(i), g.Y(P - 1)); cx.stroke();
+    cx.beginPath(); cx.moveTo(g.X(0), g.Y(i)); cx.lineTo(g.X(P - 1), g.Y(i)); cx.stroke();
+    cx.textAlign = 'center'; cx.fillText(i, g.X(i), g.Y(0) + 15); cx.textAlign = 'right'; cx.fillText(i, g.X(0) - 8, g.Y(i) + 3);
+  }
+  ALL_POINTS.forEach(p => dot(g, p, 4.5, '#fff', '#9AA5B8', 1.3));
+  dot(g, G, 6, '#8A2C5C'); label(g, G, 'G', '#8A2C5C');
+  const o = ops[opIdx], doneN = o ? opIdx + (phase === 3 ? 1 : 0) : 0;
+  for (let i = 0; i < doneN; i++) if (ops[i].pt) { dot(g, ops[i].pt, 5.5, '#8A2C5C'); label(g, ops[i].pt, ops[i].m3 + 'G', '#6B2147'); }
+  drawReal(o);
+  const vt = $('vText');
+  if (!o) { vt.innerHTML = K === 1 ? 'k = 1: Q = G. No operation needed.' : 'No operations.'; return; }
+  const real = o.kind === 'add' || o.kind === 'double', vert = o.kind === 'vertical';
+  if (phase >= 1 && real) { for (let x = 0; x < P; x++) dot(g, { x, y: mod(o.lam * (x - o.p1.x) + o.p1.y) }, 3, '#0d9488'); }
+  if (phase >= 1 && vert) { cx.strokeStyle = '#0d9488'; cx.lineWidth = 2; cx.beginPath(); cx.moveTo(g.X(o.p1.x), g.Y(0)); cx.lineTo(g.X(o.p1.x), g.Y(P - 1)); cx.stroke(); }
+  if (o.p1) { dot(g, o.p1, 9, null, '#1d4ed8', 3); label(g, o.p1, o.m1 + 'G', '#1d4ed8', 11, 16); }
+  if (o.p2 && !eq(o.p1, o.p2)) { dot(g, o.p2, 9, null, '#7c3aed', 3); label(g, o.p2, o.m2 + 'G', '#7c3aed', 11, 16); }
+  if (phase >= 2 && real) { const T = { x: o.x3, y: o.yT }; dot(g, T, 10, null, '#b91c1c', 3); label(g, T, '−R', '#b91c1c', 12, -8); }
+  if (phase >= 3 && real) {
+    const T = { x: o.x3, y: o.yT };
+    cx.strokeStyle = '#047857'; cx.lineWidth = 2; cx.setLineDash([6, 4]); cx.beginPath(); cx.moveTo(g.X(T.x), g.Y(T.y)); cx.lineTo(g.X(o.pt.x), g.Y(o.pt.y)); cx.stroke(); cx.setLineDash([]);
+    dot(g, o.pt, 8, '#047857'); label(g, o.pt, 'R = ' + o.m3 + 'G', '#047857', 12, 4);
+  }
+  const t = `<b>Operation ${opIdx + 1} / ${ops.length}</b> &nbsp; ${o.m1}G + ${o.m2}G → ${o.m3}G` + (o.bit !== undefined ? ` &nbsp;(bit ${o.bit})` : '') + '<br>';
+  let body = '';
+  if (o.kind === 'inf') body = `One operand is O: result = ${fmt(o.pt)}.`;
+  else if (vert) body = phase === 0 ? `P₁ = ${fmt(o.p1)}, P₂ = ${fmt(o.p2)}` : phase === 1 ? `Same x, opposite y: line is <b>vertical</b>.` : `Vertical line meets curve at infinity.<br>Result = <b>O</b>.`;
+  else if (phase === 0) body = `P₁ = ${fmt(o.p1)} (${o.m1}G)<br>P₂ = ${fmt(o.p2)} (${o.m2}G)`;
+  else if (phase === 1) body = `Slope λ = <b>${o.lam}</b> (mod 17)`;
+  else if (phase === 2) body = `Third intersection x₃ = <b>${o.x3}</b>, y = ${o.yT} → −R = (${o.x3}, ${o.yT})`;
+  else body = `Reflect across x-axis:<br>R = <b>(${o.x3}, ${o.y3})</b> = ${o.m3}G`;
+  vt.innerHTML = t + '<br>' + body + (capped ? '<br><br><i>Limited to first 60 steps.</i>' : '');
+  $('vList').querySelectorAll('tr').forEach((r, i) => r.classList.toggle('sel', i === opIdx));
+}
+
+// Same operation on the real curve y² = x³ + 7 (just to see the geometry)
+const rcv = $('rcv'), rx = rcv.getContext('2d');
+const REAL_P = { x: 1, y: Math.sqrt(8) };  // real analogue of G = (1,5): same x, y = √(1³ + 7)
+const REAL_MAX_M = 12;                      // beyond this, real coordinates explode and lose precision
+function realAdd(a, b) {
+  if (!a) return { pt: b }; if (!b) return { pt: a };
+  const same = Math.abs(a.x - b.x) < 1e-9;
+  if (same && Math.abs(a.y + b.y) < 1e-9) return { pt: null, vertical: true };
+  const l = same ? (3 * a.x * a.x) / (2 * a.y) : (b.y - a.y) / (b.x - a.x);
+  const x3 = l * l - a.x - b.x, y3 = l * (a.x - x3) - a.y;
+  return { pt: { x: x3, y: y3 }, T: { x: x3, y: -y3 }, lam: l };
+}
+function realMult(m) { let c = null; for (let i = 0; i < m; i++) c = realAdd(c, REAL_P).pt; return c; }
+
+function drawReal(o) {
+  const w = rcv.clientWidth, h = Math.round(w * 0.9), dpr = window.devicePixelRatio || 1;
+  rcv.style.height = h + 'px'; rcv.width = w * dpr; rcv.height = h * dpr; rx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  rx.clearRect(0, 0, w, h);
+  const r2 = v => v.toFixed(2), f = p => `(${r2(p.x)}, ${r2(p.y)})`;
+
+  // which real operation mirrors the current 𝔽₁₇ operation
+  let P1 = null, P2 = null, op = null, vertical = false, msg = '';
+  if (!o) { P1 = REAL_P; msg = 'k = 1: Q = G. Real analogue: the single point P = (1, √8) ≈ (1, 2.83).'; }
+  else if (o.kind === 'inf') { msg = `One operand is O, so ${o.m1}G + ${o.m2}G needs no line: O is the neutral element.`; }
+  else if (o.kind === 'vertical') { P1 = realMult(Math.min(o.m1, REAL_MAX_M)); P2 = { x: P1.x, y: -P1.y }; vertical = true; }
+  else if (Math.max(o.m1, o.m2, o.m3) > REAL_MAX_M) { msg = `Real analogue shown only for multiples up to ${REAL_MAX_M}P: beyond that real coordinates explode (e.g. 11P has x ≈ 3824) and lose floating-point precision — unlike 𝔽₁₇, where they always stay in 0…16.`; }
+  else { P1 = realMult(o.m1); P2 = realMult(o.m2); op = realAdd(P1, P2); }
+
+  // viewport: fit the shown points, capped so the curve stays readable
+  const shown = [P1, P2, op && op.T, op && op.pt].filter(Boolean);
+  const inView = shown.filter(p => Math.abs(p.x) <= 8 && Math.abs(p.y) <= 25);
+  const xMin = Math.min(-2.6, ...inView.map(p => p.x - 0.6)), xMax = Math.max(3.2, ...inView.map(p => p.x + 0.6));
+  const yMax = Math.max(6, ...inView.map(p => Math.abs(p.y) * 1.3));
+  const pad = 18, X = x => pad + (x - xMin) / (xMax - xMin) * (w - 2 * pad), Y = y => h / 2 - (y / yMax) * (h / 2 - pad);
+
+  // axes and curve (lower branch right→left, then upper branch, joined at y = 0)
+  rx.strokeStyle = 'rgba(27,35,64,.25)'; rx.lineWidth = 1;
+  rx.beginPath(); rx.moveTo(pad, Y(0)); rx.lineTo(w - pad, Y(0)); rx.stroke();
+  rx.beginPath(); rx.moveTo(X(0), pad); rx.lineTo(X(0), h - pad); rx.stroke();
+  const x0 = -Math.cbrt(7), S = 500; rx.beginPath();
+  for (let i = S; i >= 0; i--) { const x = x0 + (xMax - x0) * (i / S) ** 2; rx.lineTo(X(x), Y(-Math.sqrt(Math.max(0, x ** 3 + 7)))); }
+  for (let i = 0; i <= S; i++) { const x = x0 + (xMax - x0) * (i / S) ** 2; rx.lineTo(X(x), Y(Math.sqrt(Math.max(0, x ** 3 + 7)))); }
+  rx.strokeStyle = '#5C6478'; rx.lineWidth = 2.2; rx.stroke();
+
+  const rdot = (p, rad, fill, stroke, lw) => { rx.beginPath(); rx.arc(X(p.x), Y(p.y), rad, 0, 7); if (fill) { rx.fillStyle = fill; rx.fill(); } if (stroke) { rx.strokeStyle = stroke; rx.lineWidth = lw || 2; rx.stroke(); } };
+  const rlab = (p, t, col, dx = 11, dy = -10) => {
+    rx.fillStyle = col; rx.font = '700 11px "JetBrains Mono", monospace';
+    const tw = rx.measureText(t).width, x = X(p.x) + dx;
+    if (x + tw > w - 4) { rx.textAlign = 'right'; rx.fillText(t, X(p.x) - Math.abs(dx), Y(p.y) + dy); } // flip left near the edge
+    else { rx.textAlign = 'left'; rx.fillText(t, x, Y(p.y) + dy); }
+  };
+  const rt = $('rText');
+
+  if (!P1) { rdot(REAL_P, 5, '#8A2C5C'); rlab(REAL_P, 'P', '#8A2C5C'); rt.innerHTML = msg; return; }
+  if (!o) { rdot(P1, 7, '#047857'); rlab(P1, 'P = ' + f(P1), '#047857'); rt.innerHTML = msg; return; }
+
+  // phase ≥ 1: the line (vertical, tangent or chord), drawn across the whole view
+  if (phase >= 1) {
+    rx.strokeStyle = '#0d9488'; rx.lineWidth = 2; rx.setLineDash([7, 5]); rx.beginPath();
+    if (vertical) { rx.moveTo(X(P1.x), pad); rx.lineTo(X(P1.x), h - pad); }
+    else { const yAt = x => P1.y + op.lam * (x - P1.x); rx.moveTo(X(xMin), Y(yAt(xMin))); rx.lineTo(X(xMax), Y(yAt(xMax))); }
+    rx.stroke(); rx.setLineDash([]);
+  }
+  const dbl = o.kind === 'double';
+  rdot(P1, 8, null, '#1d4ed8', 3); rlab(P1, o.m1 + 'P' + (dbl ? ' (tangent point)' : ''), '#1d4ed8', 12, 16);
+  if (!dbl) { rdot(P2, 8, null, '#7c3aed', 3); rlab(P2, vertical ? '−' + o.m1 + 'P' : o.m2 + 'P', '#7c3aed', 12, 16); }
+  if (phase >= 2 && op) { rdot(op.T, 9, '#fff', '#b91c1c', 3); rlab(op.T, '−R', '#b91c1c', -30, -10); }
+  if (phase >= 3 && op) {
+    rx.strokeStyle = '#047857'; rx.lineWidth = 2; rx.setLineDash([6, 4]); rx.beginPath(); rx.moveTo(X(op.T.x), Y(op.T.y)); rx.lineTo(X(op.pt.x), Y(op.pt.y)); rx.stroke(); rx.setLineDash([]);
+    rdot(op.pt, 7, '#047857'); rlab(op.pt, 'R = ' + o.m3 + 'P', '#047857', 12, 4);
+  }
+
+  // explanation, same phases as the 𝔽₁₇ panel
+  let body;
+  if (vertical) body = phase === 0 ? `Analogue of ${o.m1}G + ${o.m2}G = P + (−P):<br>P = ${f(P1)}, −P = ${f(P2)}` : phase === 1 ? 'Same x, opposite y: the line is <b>vertical</b>.' : 'A vertical line meets the curve in no third affine point: the result is the point at infinity <b>O</b>.';
+  else if (phase === 0) body = `P₁ = ${o.m1}P = ${f(P1)}<br>P₂ = ${o.m2}P = ${f(P2)}`;
+  else if (phase === 1) body = (dbl ? 'Tangent at P₁' : 'Chord through P₁ and P₂') + `: real slope λ = <b>${op.lam.toFixed(3)}</b> (a genuine geometric slope here, a modular fraction over 𝔽₁₇)`;
+  else if (phase === 2) body = `The line meets the curve a third time at −R = ${f(op.T)}`;
+  else body = `Reflect across the x-axis:<br>R = <b>${f(op.pt)}</b> = ${o.m3}P`;
+  const off = shown.filter(p => !inView.includes(p));
+  rt.innerHTML = `<b>Real analogue of operation ${opIdx + 1}</b> &nbsp; ${o.m1}P + ${o.m2}P → ${vertical ? 'O' : o.m3 + 'P'}<br><br>` + body +
+    (off.length ? `<br><br><i>Off-scale: ${off.map(p => `(${p.x.toPrecision(4)}, ${p.y.toPrecision(4)})`).join(', ')}</i>` : '');
+}
+
+function vNext() { if (!ops.length) return; if (phase < 3) phase++; else if (opIdx < ops.length - 1) { opIdx++; phase = 0; } else stopPlay(); drawViz(); }
+function stopPlay() { clearInterval(timer); timer = null; $('vPlay').textContent = '▶ Play'; }
+function startPlay() { $('vPlay').textContent = '⏸ Pause'; timer = setInterval(vNext, +$('vSpeed').value); }$('vNext').onclick = vNext;
+$('vPrev').onclick = () => { if (opIdx > 0) opIdx--; phase = 0; drawViz(); };
+$('vReset').onclick = () => { stopPlay(); opIdx = 0; phase = 0; drawViz(); };$('vPlay').onclick = () => { if (timer) stopPlay(); else { if (opIdx === ops.length - 1 && phase === 3) { opIdx = 0; phase = 0; } startPlay(); } };
+$('vSpeed').oninput = () => {$('vSpeedLbl').textContent = (+$('vSpeed').value / 1000).toFixed(1) + ' s/phase'; if (timer) { stopPlay(); startPlay(); } };$('vMethod').onchange = () => { stopPlay(); buildOps(); drawViz(); };
+window.addEventListener('resize', drawViz);
+
+let N = 9, nUserSet = false;
+function bars(id, lid, freq) {
+  const mx = Math.max(...freq, 1);
+  $(id).innerHTML = freq.map((c, i) => `<div class="bc" title="value ${i}: ${c}"><div class="bn">${c || ''}</div><div class="bar" style="height:${c / mx * 80}px;${c ? '' : 'background:none'}"></div></div>`).join('');
+  $(lid).innerHTML = freq.map((c, i) => `<div class="bn">${i}</div>`).join('');
+}
+function chiRow(name, r) {
+  const c = chiCrit(r.df);
+  let v;
+  if (r.outside > 0) v = `<span class="bad">rejected</span> — ${r.outside} out-of-support sample(s)`;
+  else if (isNaN(c)) v = 'n/a';
+  else if (r.minE < 5) v = `<span class="warn">not valid</span> — expected counts below 5, the χ² approximation does not hold`;
+  else v = r.chi > c ? '<span class="bad">non-uniform (rejected)</span>' : '<span class="good">consistent with uniform</span>';
+  return `<tr><td>${name}</td><td class="m">${r.chi.toFixed(2)}</td><td class="m">${r.df}</td><td class="m">${isNaN(c) ? '–' : c.toFixed(2)}</td><td class="m">${isFinite(r.minE) ? r.minE.toFixed(2) : '–'}</td><td>${v}</td></tr>`;
+}
+
+// random-key experiment
+function randomKeys(M, n) { // M random keys between 1 and n-1
+  const keys = [];
+  for (let i = 0; i < M; i++) keys.push(1 + Math.floor(Math.random() * (n - 1)));
+  return keys;
+}
+function renderRandom() {
+  const n = ORD;
+  if (n < 3) { $('rndBody').innerHTML = `<tr><td colspan="6">Order of G is ${n}: only ${n - 1} possible public key(s), nothing to test.</td></tr>`; $('rndKpi').innerHTML = ''; return; }
+  const M = Math.max(10, Math.min(200000, parseInt($('mIn').value) || 1000));
+  const pts = []; let c = null; for (let k = 1; k < n; k++) { c = add(c, G).pt; pts.push(c); }
+  const ks = randomKeys(M, n);
+  const ptFreq = Array(n - 1).fill(0), fx = Array(P).fill(0), multX = Array(P).fill(0);
+  pts.forEach(p => multX[p.x]++);
+  ks.forEach(k => { ptFreq[k - 1]++; fx[pts[k - 1].x]++; });
+  const idx = [...Array(n - 1).keys()];
+  const tPt = chiSq(ptFreq, idx), xs = [...new Set(pts.map(p => p.x))], tX = chiSq(fx, xs, multX);
+  const row = (name, r) => {
+    const c = chiCrit(r.df);
+    let v;
+    if (r.df < 1) v = 'n/a (only one value)';
+    else if (r.minE < 5) v = `<span class="warn">not valid</span>: increase M`;
+    else if (r.chi > c) v = `<span class="bad">not uniform at 5%</span> (can happen by chance about 1 time in 20, try again)`;
+    else v = `<span class="good">consistent with uniform</span>`;
+    return `<tr><td>${name}</td><td class="m">${r.chi.toFixed(2)}</td><td class="m">${r.df}</td><td class="m">${c.toFixed(2)}</td><td class="m">${r.minE.toFixed(1)}</td><td>${v}</td></tr>`;
+  };
+  $('rndBody').innerHTML = row(`Q uniform over the ${n - 1} points reachable from G`, tPt) + row('x uniform over its reachable values (shared x counts double)', tX);
+  $('rndKpi').innerHTML = [
+    ['entropy of Q', entropy(ptFreq).toFixed(3) + ' bits'], ['max log₂(n−1)', Math.log2(n - 1).toFixed(3) + ' bits'],
+    ['Pearson r(k, x)', pearson(ks, ks.map(k => pts[k - 1].x)).toFixed(3)], ['Pearson r(k, y)', pearson(ks, ks.map(k => pts[k - 1].y)).toFixed(3)]
+  ].map(([l, v]) => `<div>${l}<b>${v}</b></div>`).join('');
+}
+function scatter(id, ks, vals, title) {
+  const c = $(id), w = c.clientWidth, h = 170, dpr = window.devicePixelRatio || 1; c.style.height = h + 'px'; c.width = w * dpr; c.height = h * dpr;
+  const x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, w, h);
+  const pl = 26, pb = 18, pt = 16, mk = Math.max(...ks, 1);
+  x.strokeStyle = '#C9CFBF'; x.beginPath(); x.moveTo(pl, pt); x.lineTo(pl, h - pb); x.lineTo(w - 6, h - pb); x.stroke();
+  x.fillStyle = '#5C6478'; x.font = '10px "JetBrains Mono", monospace'; x.textAlign = 'left'; x.fillText(title, pl + 4, 11);
+  x.textAlign = 'right'; x.fillText('16', pl - 3, pt + 8); x.fillText('0', pl - 3, h - pb); x.textAlign = 'center'; x.fillText('k = ' + mk, w - 30, h - 4);
+  x.fillStyle = '#8A2C5C';
+  ks.forEach((k, i) => { x.beginPath(); x.arc(pl + (k - 1) / Math.max(mk - 1, 1) * (w - pl - 12), h - pb - vals[i] / 16 * (h - pb - pt), 2.6, 0, 7); x.fill(); });
+}
+
+function renderStats() {
+  if (!$('p-stats').classList.contains('on')) return;
+  if (!nUserSet) N = ORD; $('nIn').value = N;
+  const a = analyze(G, N), idealPt = Math.log2(Math.max(a.n - 1, 1));
+  $('kpis').innerHTML = [['order n of G', a.n], ['samples (≠ O)', a.samples], ['distinct points', a.distinctPts], ['distinct x / y', `${a.distinctX} / ${a.distinctY}`], ['entropy of points', a.entPt.toFixed(2) + ' bits'], ['max possible log₂(n−1)', idealPt.toFixed(2) + ' bits']].map(([l, v]) => `<div>${l}<b>${v}</b></div>`).join('');
+  bars('hx', 'hxl', a.freqX); bars('hy', 'hyl', a.freqY);
+  $('chiBody').innerHTML = chiRow('x vs uniform over 0…16', a.chiX17) + chiRow('x vs reachable x (weighted by multiplicity)', a.chiXsub) + chiRow('y vs uniform over 0…16', a.chiY17) + chiRow('y vs uniform over reachable y', a.chiYsub);
+  const periods = Math.floor(N / a.n);
+  $('sweepNote').innerHTML = `<b>Careful:</b> k = 1, 2, …, ${N} is not a random sample. The points repeat every ${a.n} keys, so the counts are decided in advance ` +
+    `and the "reachable" rows are close to 0 just for that reason. The "0…16" rows use the wrong list of values, since G can only produce ${a.distinctX} values of x and ${a.distinctY} of y. ` +
+    `Rows with fewer than 5 expected observations are marked <span class="warn">not valid</span>. The random-key test below avoids these problems.`;
+  $('bitsRef').textContent = 'uniform on 0…16 → ' + [4, 3, 2, 1, 0].map(j => { let c = 0; for (let v = 0; v < P; v++) if ((v >> j) & 1) c++; return `bit ${j}: ${(c / P).toFixed(2)}`; }).join(' · ');
+  renderRandom();
+  const bb = (nm, arr) => `<div style="margin:.3rem 0"><b class="muted">${nm}</b>` + arr.map((p, j) => ({ j, p })).reverse().map(({ j, p }) => `<div class="row" style="gap:.4rem"><span class="bn" style="width:34px">bit ${j}</span><div style="flex:1;background:#E9ECE3;height:11px;border-radius:5px;position:relative"><div style="width:${p * 100}%;height:100%;background:var(--accent-orange-hover);border-radius:5px"></div><div style="position:absolute;left:50%;top:-2px;height:15px;border-left:2px dashed #78716c"></div></div><span class="bn" style="width:32px">${p.toFixed(2)}</span></div>`).join('') + '</div>';
+  $('bitsBox').innerHTML = bb('x coordinate', a.bitsX) + bb('y coordinate', a.bitsY);$('corr').innerHTML = `<div>Pearson r(k, x)<b>${a.rKX.toFixed(3)}</b></div><div>Pearson r(k, y)<b>${a.rKY.toFixed(3)}</b></div>`;
+  scatter('sc1', a.ks, a.pts.map(p => p.x), 'x(kG) vs k'); scatter('sc2', a.ks, a.pts.map(p => p.y), 'y(kG) vs k');
+  $('symNote').innerHTML = `Hidden structure: x(kG) = x((n−k)G) holds for <b>${a.sym}/${a.symTot}</b> values of k; period n = ${a.n}.`;
+  $('avBody').innerHTML = avalanche(G).map(r => `<tr><td class="m">${r.bit}</td><td class="m">${r.ecc.toFixed(3)}</td><td class="m">${SHA ? r.sha.toFixed(3) : '…'}</td><td class="m ${r.pred === 1 ? 'good' : 'bad'}">${(r.pred * 100).toFixed(0)}% (${r.n} cases)</td></tr>`).join('');
+  $('baseBody').innerHTML = ALL_POINTS.map((p, i) => {
+    const o = order(p), b = analyze(p, o);
+    return `<tr class="clickable ${eq(p, G) ? 'sel' : ''}" data-i="${i}"><td class="m">${fmt(p)}</td><td class="m">${o}</td><td class="m">${b.distinctX}</td><td class="m">${b.entPt.toFixed(2)}</td><td class="m">${b.samples > 1 ? b.rKX.toFixed(2) : '–'}</td><td class="m">${b.samples > 1 ? b.rKY.toFixed(2) : '–'}</td></tr>`;
+  }).join('');
+  $('baseBody').querySelectorAll('tr').forEach(r => r.onclick = () => { $('gSel').value = r.dataset.i; $('gSel').onchange(); });
+}
+
+$('nIn').oninput = () => { N = Math.max(2, Math.min(5000, parseInt($('nIn').value) || 2)); nUserSet = true; renderStats(); };
+$('nOrd').onclick = () => { nUserSet = false; renderStats(); };$('n20').onclick = () => { N = 20; nUserSet = true; renderStats(); };
+$('n1000').onclick = () => { N = 1000; nUserSet = true; renderStats(); };
+$('mBtn').onclick = renderRandom;
+$('mIn').onchange = renderRandom;$('homBtn').onclick = () => {
+  let ok = 0; const T = 5000;
+  for (let i = 0; i < T; i++) { const a = 1 + Math.floor(Math.random() * 10000), b = 1 + Math.floor(Math.random() * 10000); if (eq(add(mul(G, a), mul(G, b)).pt, mul(G, a + b))) ok++; }
+  $('homOut').textContent = `${ok}/${T} pairs satisfy aG + bG = (a+b)G`;
+};
+
+function toggleModal(open) {
+  const modal = document.getElementById('theoryModal');
+  if (open) modal.classList.add('open');
+  else modal.classList.remove('open');
+}
+
+// Sidebar ring: O, G, 2G, ..., (n-1)G on a circle.
+// k steps from O land on kG; after n steps we are back at O.
+function drawRing() {
+  const c = $('ring'), w = c.clientWidth || 280, h = w, dpr = window.devicePixelRatio || 1;
+  c.style.height = h + 'px'; c.width = w * dpr; c.height = h * dpr;
+  const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  const n = ORD, cx0 = w / 2, cy0 = h / 2, R = w * 0.36;
+  const ang = i => -Math.PI / 2 + 2 * Math.PI * i / n;
+  const at = (i, rad) => [cx0 + rad * Math.cos(ang(i)), cy0 + rad * Math.sin(ang(i))];
+  const r = K % n, turns = Math.floor(K / n), Q = mul(G, K);
+
+  g.strokeStyle = 'rgba(246,247,242,.18)'; g.lineWidth = 1.5;
+  g.beginPath(); g.arc(cx0, cy0, R, 0, 2 * Math.PI); g.stroke();
+  if (turns > 0) { // completed laps
+    g.strokeStyle = 'rgba(231,166,198,.35)'; g.lineWidth = 3;
+    g.beginPath(); g.arc(cx0, cy0, R + 8, 0, 2 * Math.PI); g.stroke();
+  }
+  if (r > 0) { // the walk O → kG
+    g.strokeStyle = '#E7A6C6'; g.lineWidth = 4; g.lineCap = 'round';
+    g.beginPath(); g.arc(cx0, cy0, R, ang(0), ang(r)); g.stroke();
+  }
+  for (let i = 0; i < n; i++) {
+    const [x, y] = at(i, R), cur = i === r;
+    g.beginPath(); g.arc(x, y, cur ? 9 : (n > 12 ? 3.5 : 5), 0, 2 * Math.PI);
+    if (i === 0) { g.fillStyle = '#1B2340'; g.fill(); g.strokeStyle = cur ? '#F3E37A' : 'rgba(246,247,242,.8)'; g.lineWidth = 2; g.stroke(); }
+    else { g.fillStyle = cur ? '#34D399' : (i < r ? '#E7A6C6' : 'rgba(246,247,242,.5)'); g.fill(); }
+    const [lx, ly] = at(i, R + 21);
+    g.fillStyle = cur ? '#F6F7F2' : 'rgba(246,247,242,.55)';
+    g.font = (cur ? '700 ' : '500 ') + (n > 12 ? '9px ' : '10.5px ') + '"JetBrains Mono", monospace';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(i === 0 ? 'O' : i + 'G', lx, ly);
+  }
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillStyle = 'rgba(246,247,242,.6)'; g.font = '600 12px "Bricolage Grotesque", sans-serif';
+  g.fillText('public key Q', cx0, cy0 - 26);
+  g.fillStyle = Q ? '#34D399' : '#F3E37A'; g.font = '700 22px "JetBrains Mono", monospace';
+  g.fillText(Q ? `(${Q.x}, ${Q.y})` : 'O', cx0, cy0 + 2);
+  g.fillStyle = '#E7A6C6'; g.font = '600 12px "JetBrains Mono", monospace';
+  g.fillText(`k = ${K}`, cx0, cy0 + 28);
+  $('ringCap').textContent = r === 0
+    ? `k = ${K} ≡ 0 (mod ${n}) lands on O: not a valid private key.`
+    : turns > 0
+      ? `⟨G⟩ has ${n} elements; k = ${K} wraps round ${turns} time${turns > 1 ? 's' : ''}: ${K} mod ${n} = ${r}.`
+      : `⟨G⟩ has ${n} elements; k walks ${K} step${K > 1 ? 's' : ''} from O.`;
+}
+
+const setK = v => { $('kIn').value = Math.max(1, Math.min(1000000, v)); $('kIn').oninput(); };
+$('kMinus').onclick = () => setK(K - 1);
+$('kPlus').onclick = () => setK(K + 1);
+window.addEventListener('resize', drawRing);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { drawRing(); drawViz(); });
+
+function refresh() { stopPlay(); renderCore(); drawRing(); buildOps(); drawViz(); renderStats(); }
+refresh();
+loadHashes();
+</script>
+</body>
+</html>

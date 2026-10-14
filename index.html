@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistics — Homeworks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper: #F6F7F2;
+  --grid: #E2E6DA;
+  --ink: #1B2340;
+  --ink-soft: #2A3456;
+  --muted: #5C6478;
+  --plum: #8A2C5C;
+  --plum-light: #E7A6C6;
+  --green: #047857;
+  --marker: #F3E37A;
+  --line: rgba(27, 35, 64, 0.16);
+  --mono: 'JetBrains Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  line-height: 1.55;
+  min-height: 100vh;
+}
+
+:focus-visible { outline: 2px solid var(--plum); outline-offset: 2px; }
+a { color: inherit; }
+
+/* ───────── shell: ink sidebar + paper main (same as the homeworks) ───────── */
+.shell { display: grid; grid-template-columns: 340px minmax(0, 1fr); min-height: 100vh; }
+
+.side {
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  background: var(--ink); color: var(--paper);
+  padding: 1.6rem 1.4rem 1.4rem;
+  display: flex; flex-direction: column; gap: 1.4rem;
+}
+.brand h1 { font-size: 1.75rem; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em; margin-top: 0.55rem; }
+.brand .eq { font-family: var(--mono); font-size: 0.85rem; color: var(--plum-light); margin-top: 0.35rem; }
+.brand .who { font-size: 0.9rem; color: rgba(246, 247, 242, 0.75); margin-top: 0.6rem; }
+.badge {
+  display: inline-block; font-size: 0.75rem; font-weight: 700;
+  border: 1px solid rgba(246, 247, 242, 0.4); border-radius: 4px; padding: 0.1rem 0.5rem;
+}
+.intro { font-size: 0.88rem; color: rgba(246, 247, 242, 0.72); }
+
+.count { display: flex; gap: 1.4rem; }
+.count div { font-size: 0.78rem; color: rgba(246, 247, 242, 0.6); }
+.count b { display: block; font-family: var(--mono); font-size: 1.5rem; color: var(--paper); line-height: 1.2; }
+
+.nav { display: grid; gap: 0.15rem; margin-top: auto; border-top: 1px solid rgba(246, 247, 242, 0.15); padding-top: 0.9rem; }
+.nav a, .nav span {
+  display: block; text-decoration: none; color: rgba(246, 247, 242, 0.75);
+  border-left: 3px solid transparent; border-radius: 0 6px 6px 0;
+  padding: 0.5rem 0.8rem; font-size: 0.95rem; font-weight: 600;
+}
+.nav a:hover { background: var(--paper); color: var(--ink); border-left-color: var(--plum); }
+.nav span { color: rgba(246, 247, 242, 0.35); }
+
+/* ───────── main column ───────── */
+.wrap { width: 100%; max-width: 1000px; padding: 2rem 2.2rem 4rem; display: flex; flex-direction: column; gap: 1.25rem; }
+
+.hw {
+  display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); gap: 1.4rem;
+  background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 1.5rem 1.6rem;
+}
+.hw .num { font-family: var(--mono); font-size: 2.9rem; font-weight: 700; line-height: 1; color: var(--ink); }
+.hw .num small { display: block; font-family: 'Bricolage Grotesque', sans-serif; font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-top: 0.4rem; }
+.hw h2 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.01em; line-height: 1.25; }
+.hw h2 a { text-decoration: none; background: linear-gradient(transparent 58%, var(--marker) 58%, var(--marker) 92%, transparent 92%); }
+.hw .meta { font-family: var(--mono); font-size: 0.8rem; color: var(--plum); margin-top: 0.25rem; }
+.hw p { font-size: 0.95rem; color: var(--muted); margin-top: 0.6rem; max-width: 72ch; }
+.chips { margin-top: 0.8rem; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.chip { font-size: 0.78rem; font-weight: 600; border: 1px solid var(--line); border-radius: 4px; padding: 0.05rem 0.5rem; color: var(--ink); background: #F4F5EF; }
+.open {
+  display: inline-block; margin-top: 1rem; text-decoration: none;
+  background: var(--plum); color: #fff; border-radius: 6px; padding: 0.5rem 1rem; font-weight: 700; font-size: 0.9rem;
+}
+.open:hover { background: #A8406F; }
+
+.hw.soon { background: transparent; border: 2px dashed rgba(27, 35, 64, 0.25); }
+.hw.soon .num, .hw.soon h2 { color: rgba(27, 35, 64, 0.4); }
+
+footer { font-size: 0.8rem; color: var(--muted); margin-top: 0.5rem; }
+
+@media (max-width: 960px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .side { position: static; height: auto; }
+  .nav { margin-top: 0; }
+  .wrap { padding: 1.2rem 1rem 3rem; }
+  .hw { grid-template-columns: 1fr; gap: 0.6rem; padding: 1.2rem 1.1rem; }
+  .hw .num { font-size: 2.2rem; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <aside class="side">
+    <div class="brand">
+      <span class="badge" id="badge"></span>
+      <h1 id="course"></h1>
+      <p class="eq" id="subtitle"></p>
+      <p class="who" id="student"></p>
+    </div>
+    <p class="intro" id="intro"></p>
+    <div class="count" id="count"></div>
+    <nav class="nav" id="nav" aria-label="Homeworks"></nav>
+  </aside>
+
+  <main class="wrap" id="list"></main>
+
+</div>
+
+<script>
+// ===================================================================
+//  EDIT HERE — everything on the page comes from these two lists.
+//  To add a new homework: copy one block in HOMEWORKS, change the
+//  values and put the file name (exactly as in the repository,
+//  capital letters included) in "file".
+//  A homework with file: '' is shown as "coming soon".
+// ===================================================================
+const SITE = {
+  badge: 'A.Y. 2026/27',
+  course: 'Statistics Homeworks',
+  subtitle: 'y² ≡ x³ + 7 (mod p)',
+  student: '',   // e.g. 'Name Surname · student ID'
+  intro: ''      // optional short text under the title; leave empty to hide it
+};
+
+const HOMEWORKS = [
+  {
+    number: 1,
+    title: 'Private key → public key on a toy elliptic curve',
+    file: 'Homework1.html',
+    date: '',   // e.g. 'October 2026'
+    description: 'Elliptic-curve scalar multiplication Q = k·G on y² = x³ + 7 (mod 17), with repeated addition and double-and-add, a slow-motion visualiser and a statistical exploration of the resulting points.',
+    topics: ['secp256k1 (toy version)', 'point addition', 'double-and-add', 'χ² test', 'entropy', 'avalanche']
+  },
+  {
+    number: 2,
+    title: 'From wallet seed to Ethereum address',
+    file: 'Homework2.html',
+    date: '',
+    description: 'The Ethereum wallet pipeline step by step: mnemonic phrase, seed, key derivation, public key, address and checksum, with the statistical properties of each step and the historical context of the standards.',
+    topics: ['BIP-39', 'BIP-32', 'BIP-44', 'secp256k1', 'Keccak-256', 'EIP-55']
+  },
+  // { number: 3, title: '...', file: 'Homework3.html', date: '', description: '...', topics: ['...'] },
+];
+// ===================================================================
+
+const $ = id => document.getElementById(id);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const pad = n => String(n).padStart(2, '0');
+
+$('badge').textContent = SITE.badge;
+$('course').textContent = SITE.course;
+$('subtitle').textContent = SITE.subtitle;
+$('student').textContent = SITE.student;
+$('intro').textContent = SITE.intro;
+$('intro').hidden = !SITE.intro;
+
+const ready = HOMEWORKS.filter(h => h.file);
+$('count').innerHTML = `<div><b>${ready.length}</b>published</div>` +
+  (HOMEWORKS.length > ready.length ? `<div><b>${HOMEWORKS.length - ready.length}</b>coming soon</div>` : '');
+
+$('nav').innerHTML = HOMEWORKS.map(h => h.file
+  ? `<a href="${esc(h.file)}">${pad(h.number)} · ${esc(h.title)}</a>`
+  : `<span>${pad(h.number)} · coming soon</span>`).join('');
+
+$('list').innerHTML = HOMEWORKS.map(h => {
+  if (!h.file) return `
+    <article class="hw soon">
+      <div class="num">${pad(h.number)}</div>
+      <div><h2>${esc(h.title || 'Coming soon')}</h2>${h.description ? `<p>${esc(h.description)}</p>` : ''}</div>
+    </article>`;
+  return `
+    <article class="hw">
+      <div class="num">${pad(h.number)}<small>Homework ${h.number}</small></div>
+      <div>
+        <h2><a href="${esc(h.file)}">${esc(h.title)}</a></h2>
+        ${h.date ? `<div class="meta">${esc(h.date)}</div>` : ''}
+        <p>${esc(h.description)}</p>
+        <div class="chips">${(h.topics || []).map(t => `<span class="chip">${esc(t)}</span>`).join('')}</div>
+        <a class="open" href="${esc(h.file)}">Open homework ${h.number}</a>
+      </div>
+    </article>`;
+}).join('') + `<footer>Last updated: ${new Date(document.lastModified).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</footer>`;
+</script>
+</body>
+</html>
