@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HMWK 7 — Statistical Independence and the χ² Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper: #F6F7F2;
+  --grid: #E2E6DA;
+  --ink: #1B2340;
+  --ink-soft: #2A3456;
+  --muted: #5C6478;
+  --plum: #8A2C5C;
+  --plum-light: #E7A6C6;
+  --green: #047857;
+  --red: #b91c1c;
+  --marker: #F3E37A;
+  --line: rgba(27, 35, 64, 0.16);
+  --mono: 'JetBrains Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+
+body {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  line-height: 1.55;
+  min-height: 100vh;
+}
+
+:focus-visible { outline: 2px solid var(--plum); outline-offset: 2px; }
+
+/* ───────── shell: ink sidebar + paper main (same as Homework 1–6) ───────── */
+.shell { display: grid; grid-template-columns: 340px minmax(0, 1fr); min-height: 100vh; }
+
+.side {
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  background: var(--ink); color: var(--paper);
+  padding: 1.6rem 1.4rem 1.4rem;
+  display: flex; flex-direction: column; gap: 1.05rem;
+}
+.brand h1 { font-size: 1.5rem; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em; margin-top: 0.55rem; }
+.brand .eq { font-family: var(--mono); font-size: 0.82rem; color: var(--plum-light); margin-top: 0.35rem; }
+.badge {
+  display: inline-block; font-size: 0.75rem; font-weight: 700;
+  border: 1px solid rgba(246, 247, 242, 0.4); border-radius: 4px; padding: 0.1rem 0.5rem;
+}
+
+/* link back to the list of homeworks */
+.home {
+  display: flex; width: fit-content; align-items: center; gap: 0.4rem; margin-bottom: 0.7rem;
+  font-size: 0.82rem; font-weight: 600; color: rgba(246, 247, 242, 0.7); text-decoration: none;
+}
+.home span { font-size: 1.05rem; line-height: 1; transition: transform 0.15s ease; }
+.home:hover { color: var(--paper); }
+.home:hover span { transform: translateX(-3px); }
+a.badge { color: var(--paper); text-decoration: none; }
+a.badge:hover { background: rgba(246, 247, 242, 0.1); }
+
+.grp { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--plum-light); border-top: 1px solid rgba(246, 247, 242, 0.15); padding-top: 0.6rem; }
+.ctl { display: grid; gap: 0.6rem; }
+.ctl > label { display: grid; gap: 0.3rem; font-size: 0.85rem; font-weight: 600; color: rgba(246, 247, 242, 0.75); }
+.ctl .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.ctl .two label { display: grid; gap: 0.3rem; font-size: 0.85rem; font-weight: 600; color: rgba(246, 247, 242, 0.75); }
+.ctl .rangeval { font-family: var(--mono); color: var(--paper); float: right; }
+input[type=range] { width: 100%; accent-color: var(--plum-light); }
+
+.spaces { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+.spaces div { font-size: 0.72rem; color: rgba(246, 247, 242, 0.6); border-top: 1px solid rgba(246, 247, 242, 0.2); padding-top: 0.35rem; min-width: 0; }
+.spaces b { display: block; font-family: var(--mono); font-size: 0.92rem; color: var(--paper); overflow-wrap: anywhere; }
+.verdict { font-size: 0.85rem; font-weight: 700; border-radius: 6px; padding: 0.45rem 0.7rem; }
+.verdict.dep { background: rgba(231, 166, 198, 0.18); color: var(--plum-light); }
+.verdict.ind { background: rgba(4, 120, 87, 0.25); color: #9BE3C6; }
+
+.tabs { display: grid; gap: 0.1rem; margin-top: auto; border-top: 1px solid rgba(246, 247, 242, 0.15); padding-top: 0.8rem; }
+.tab {
+  text-align: left; background: transparent; color: rgba(246, 247, 242, 0.75);
+  border: none; border-left: 3px solid transparent; border-radius: 0 6px 6px 0;
+  padding: 0.45rem 0.8rem; font-size: 0.93rem; font-weight: 600;
+}
+.tab:hover { background: rgba(246, 247, 242, 0.06); color: var(--paper); }
+.tab.on { background: var(--paper); color: var(--ink); border-left-color: var(--plum); }
+
+/* ───────── main column ───────── */
+.wrap { width: 100%; max-width: 1080px; padding: 2rem 2.2rem 4rem; display: flex; flex-direction: column; gap: 1.25rem; }
+
+.panel { display: none; flex-direction: column; gap: 1.25rem; }
+.panel.on { display: flex; }
+
+.card { background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 1.4rem 1.5rem; min-width: 0; }
+
+h2 { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.01em; color: var(--ink); margin-bottom: 0.8rem; }
+h3 { font-size: 1rem; font-weight: 700; margin: 1.1rem 0 0.35rem; }
+h3:first-child { margin-top: 0; }
+
+select, input[type=number], textarea {
+  font-family: var(--mono); font-weight: 700;
+  border: 1px solid var(--line); border-radius: 6px;
+  padding: 0.4rem 0.6rem; background: #fff; color: var(--plum);
+}
+textarea { width: 100%; min-height: 140px; font-weight: 400; color: var(--ink); font-size: 0.85rem; line-height: 1.5; resize: vertical; }
+.side select, .side input[type=number] { border-color: rgba(246, 247, 242, 0.25); width: 100%; }
+.side select:disabled, .side input:disabled { opacity: 0.45; }
+
+button {
+  font: inherit; font-weight: 600; font-size: 0.85rem;
+  border: 1px solid var(--line); background: #fff; color: var(--ink);
+  padding: 0.45rem 0.9rem; border-radius: 6px; cursor: pointer;
+}
+button.primary { background: var(--plum); color: #fff; border-color: var(--plum); }
+button.primary:hover { background: #742149; }
+
+pre.console {
+  font-family: var(--mono); font-size: 0.8rem; line-height: 1.6;
+  background: var(--ink); color: #E8ECF5; border-radius: 6px;
+  padding: 1.2rem; overflow-x: auto; white-space: pre;
+}
+.hl { color: var(--marker); }
+.dim { color: #9AA5C4; }
+
+/* boxed results read like a highlighted line in a notebook (as in Homework 1) */
+.key {
+  display: inline-block; font-family: var(--mono); font-size: 1.05rem; font-weight: 700; color: var(--ink);
+  background: linear-gradient(transparent 52%, var(--marker) 52%, var(--marker) 92%, transparent 92%);
+  padding: 0 0.3rem;
+}
+.deriv { font-family: var(--mono); font-size: 0.86rem; line-height: 1.9; background: #FBFBF7; border-left: 3px solid var(--plum); padding: 0.7rem 1rem; margin: 0.6rem 0; overflow-x: auto; white-space: nowrap; }
+
+.grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.25rem; }
+.mini { border-top: 2px solid var(--ink); padding-top: 0.5rem; }
+.mini h3 { margin-top: 0; }
+.mini p { font-size: 0.88rem; color: var(--muted); margin-top: 0.3rem; }
+
+table { border-collapse: collapse; width: 100%; font-size: 0.85rem; background: #fff; }
+th { background: #EEF0E8; color: var(--ink); padding: 0.5rem; text-align: left; font-weight: 700; border-bottom: 1px solid var(--line); }
+td { padding: 0.45rem 0.5rem; border-bottom: 1px solid #ECEEE6; vertical-align: top; }
+td.m, th.m { font-family: var(--mono); text-align: center; white-space: nowrap; }
+tr.tot td, td.tot { background: #F4F5EF; font-weight: 700; }
+tr.sel { background: #FBF6D3; }
+td.hit { background: #E3F4EC; color: var(--green); font-weight: 700; }
+td.miss { background: #FBEAEA; color: var(--red); font-weight: 700; }
+td.low { outline: 2px solid var(--red); outline-offset: -2px; }
+td small { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 400; }
+.scroll { overflow-x: auto; }
+
+canvas.ch { width: 100%; display: block; }
+canvas.l { height: 300px; }
+canvas.md { height: 250px; }
+.legend { display: flex; flex-wrap: wrap; gap: 0.3rem 1.1rem; font-size: 0.78rem; color: var(--muted); margin: 0.4rem 0 0.2rem; }
+.sw { display: inline-block; width: 18px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 0.35rem; }
+.sw.box { height: 10px; }
+.sw.dash { background: repeating-linear-gradient(90deg, currentColor 0 5px, transparent 5px 8px) !important; }
+
+/* stacked bars of the conditional distributions */
+.bars { display: grid; gap: 0.45rem; margin-top: 0.6rem; }
+.bar { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 0.7rem; align-items: center; font-size: 0.85rem; }
+.bar > span { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar.all > span { color: var(--plum); }
+.stack { display: flex; height: 24px; border-radius: 4px; overflow: hidden; background: #EEF0E8; }
+.stack i { display: block; height: 100%; font-style: normal; font-family: var(--mono); font-size: 0.7rem; color: #fff; text-align: center; line-height: 24px; overflow: hidden; white-space: nowrap; }
+.bar.all .stack { outline: 2px solid var(--ink); outline-offset: 1px; }
+
+.muted { color: var(--muted); font-size: 0.88rem; }
+.note { font-size: 0.86rem; background: #FBF6D3; border-left: 3px solid #D9C23A; padding: 0.75rem 1rem; margin-top: 0.7rem; color: var(--ink); }
+.note.good { background: #E3F4EC; border-left-color: var(--green); }
+.note.bad { background: #FBEAEA; border-left-color: var(--red); }
+
+.kpi { display: flex; flex-wrap: wrap; gap: 0 1.6rem; }
+.kpi div { border-top: 2px solid var(--ink); padding: 0.4rem 0 0.2rem; font-size: 0.78rem; color: var(--muted); min-width: 110px; }
+.kpi b { display: block; font-family: var(--mono); font-size: 1.05rem; color: var(--ink); }
+
+.disc p, .disc li { font-size: 0.92rem; margin: 0.45rem 0; max-width: 78ch; }
+.disc ul, .disc ol { padding-left: 1.2rem; }
+
+@media (max-width: 960px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .side { position: static; height: auto; min-width: 0; }
+  .card { padding: 1.1rem 1rem; }
+  table { display: block; overflow-x: auto; }
+  .tabs { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-top: 0; }
+  .wrap { padding: 1.2rem 1rem 3rem; }
+  .grid2 { grid-template-columns: 1fr; }
+  .bar { grid-template-columns: 90px minmax(0, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Sidebar: dataset, test settings and navigation -->
+  <aside class="side">
+    <div class="brand">
+      <a class="home" href="index.html"><span aria-hidden="true">←</span> All homeworks</a>
+      <a class="badge" href="index.html">HMWK 7</a>
+      <h1>Statistical independence and the χ² test</h1>
+      <p class="eq">χ² = Σ (Oᵢⱼ − Eᵢⱼ)² / Eᵢⱼ</p>
+    </div>
+
+    <div class="grp">Dataset (X, F)</div>
+    <div class="ctl">
+      <label>Dataset
+        <select id="ds"></select>
+      </label>
+      <div class="two">
+        <label>Records n
+          <select id="n">
+            <option value="60">60</option>
+            <option value="300">300</option>
+            <option value="1200" selected>1,200</option>
+            <option value="6000">6,000</option>
+          </select>
+        </label>
+        <label>Seed
+          <input type="number" id="seed" value="78" min="1" step="1">
+        </label>
+      </div>
+      <label>Strength of the link X–F <span class="rangeval" id="lamV">100%</span>
+        <input type="range" id="lam" min="0" max="100" step="5" value="100">
+      </label>
+      <label>Significance level α
+        <select id="alpha">
+          <option value="0.1">0.10</option>
+          <option value="0.05" selected>0.05</option>
+          <option value="0.01">0.01</option>
+        </select>
+      </label>
+    </div>
+    <div class="spaces" aria-label="Result of the test">
+      <div><b id="sChi">–</b>χ²</div>
+      <div><b id="sDf">–</b>df</div>
+      <div><b id="sP">–</b>p-value</div>
+    </div>
+    <p class="verdict" id="sVer">–</p>
+
+    <nav class="tabs" aria-label="Sections">
+      <button class="tab on" data-t="data">1 · Data and table</button>
+      <button class="tab" data-t="cond">2 · Conditional frequencies</button>
+      <button class="tab" data-t="chi">3 · Expected and χ²</button>
+      <button class="tab" data-t="sim">4 · Simulation check</button>
+      <button class="tab" data-t="theory">5 · Independence</button>
+      <button class="tab" data-t="cause">6 · Association vs causality</button>
+    </nav>
+  </aside>
+
+  <main class="wrap">
+
+  <!-- ============ 1 · DATA AND TABLE ============ -->
+  <section class="panel on" id="p-data">
+    <div class="card">
+      <h2 id="dsTitle">Dataset</h2>
+      <p class="muted" id="dsNote"></p>
+      <div class="kpi" style="margin-top:.8rem" id="dsKpi"></div>
+    </div>
+
+    <div class="card" id="customCard" hidden>
+      <h2>My own dataset</h2>
+      <p class="muted" id="customHelp"></p>
+      <div style="display:flex;gap:.6rem;align-items:center;margin:.6rem 0;flex-wrap:wrap">
+        <select id="customFmt" aria-label="Format of the data">
+          <option value="rec" selected>raw records (x, f)</option>
+          <option value="tab">table of counts</option>
+        </select>
+        <button type="button" id="customEx">Load the example</button>
+      </div>
+      <textarea id="customTxt" spellcheck="false" aria-label="Bivariate dataset as CSV"></textarea>
+      <div style="display:flex;gap:.6rem;align-items:center;margin-top:.6rem;flex-wrap:wrap">
+        <button class="primary" type="button" id="customBtn">Analyse</button>
+        <span class="muted" id="customMsg"></span>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Raw records</h2>
+        <p class="muted" id="rawCap"></p>
+        <div class="scroll" style="margin-top:.5rem"><table id="rawTbl"></table></div>
+        <button type="button" id="dlBtn" style="margin-top:.7rem">Download all records (CSV)</button>
+      </div>
+      <div class="card">
+        <h2>Building the table</h2>
+        <pre class="console" id="code"></pre>
+        <p class="muted" style="margin-top:.5rem">One pass over the records: each record adds 1 to the cell of its pair (x, f). Row and column totals are the sums of the cells.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Contingency table (absolute frequencies nᵢⱼ)</h2>
+      <div class="scroll"><table id="ctTbl"></table></div>
+    </div>
+
+    <div class="card">
+      <h2>Joint and marginal relative frequencies</h2>
+      <p class="muted">fᵢⱼ = nᵢⱼ / n. The last column is the marginal distribution of X (fᵢ·), the last row the marginal distribution of F (f·ⱼ).</p>
+      <div class="scroll" style="margin-top:.5rem"><table id="relTbl"></table></div>
+    </div>
+  </section>
+
+  <!-- ============ 2 · CONDITIONAL FREQUENCIES ============ -->
+  <section class="panel" id="p-cond">
+    <div class="card">
+      <h2>Distribution of F given X (row profiles)</h2>
+      <p class="muted">f(F = j | X = i) = nᵢⱼ / nᵢ·. Each row adds up to 100%. The outlined bar at the bottom is the marginal distribution of F: if X and F were independent, every row would look like it.</p>
+      <div class="legend" id="rowLeg"></div>
+      <div class="bars" id="rowBars"></div>
+      <div class="scroll" style="margin-top:1rem"><table id="rowTbl"></table></div>
+    </div>
+
+    <div class="card">
+      <h2>Distribution of X given F (column profiles)</h2>
+      <p class="muted">f(X = i | F = j) = nᵢⱼ / n·ⱼ. Each column adds up to 100%; the last column is the marginal of X.</p>
+      <div class="legend" id="colLeg"></div>
+      <div class="bars" id="colBars"></div>
+      <div class="scroll" style="margin-top:1rem"><table id="colTbl"></table></div>
+    </div>
+
+    <div class="card">
+      <h2>What I observe</h2>
+      <div class="note" id="condNote"></div>
+    </div>
+  </section>
+
+  <!-- ============ 3 · EXPECTED AND CHI-SQUARE ============ -->
+  <section class="panel" id="p-chi">
+    <div class="card">
+      <h2>Expected frequencies under independence</h2>
+      <div class="deriv">If X ⟂ F:   P(X = i, F = j) = P(X = i)·P(F = j)   ⇒   <span class="key">Eᵢⱼ = n · fᵢ· · f·ⱼ = nᵢ· · n·ⱼ / n</span></div>
+      <p class="muted">Each cell shows the expected count E and, below it, the observed count O. A red border means E &lt; 5, where the χ² approximation becomes unreliable.</p>
+      <div class="scroll" style="margin-top:.6rem"><table id="expTbl"></table></div>
+      <p class="muted" style="margin-top:.5rem" id="expNote"></p>
+    </div>
+
+    <div class="card">
+      <h2>Contribution of each cell</h2>
+      <p class="muted">Top: (O − E)² / E, the part of χ² coming from that cell (darker = larger). Bottom: the adjusted residual z = (O − E)/√(E(1 − fᵢ·)(1 − f·ⱼ)), which is about N(0, 1) under independence (the simpler (O − E)/√E has a smaller variance, so it underestimates). Cells with |z| &gt; 2 are the ones that "break" independence: purple when there are more cases than expected, green when there are fewer.</p>
+      <div class="scroll" style="margin-top:.6rem"><table id="contTbl"></table></div>
+    </div>
+
+    <div class="card">
+      <h2>The test</h2>
+      <div class="deriv">H₀: X and F are independent      H₁: they are not<br>χ² = Σᵢ Σⱼ (Oᵢⱼ − Eᵢⱼ)² / Eᵢⱼ  ~  χ²((r − 1)(c − 1))  under H₀ (for large n)<br>p-value = P(χ²_df ≥ χ²_obs)      Cramér's V = √( χ² / (n · (min(r, c) − 1)) )</div>
+      <div class="kpi" style="margin-top:.8rem" id="testKpi"></div>
+      <canvas class="ch l" id="cChi" style="margin-top:1rem"></canvas>
+      <div class="legend"><span style="color:var(--ink)"><span class="sw" style="background:var(--ink)"></span>density of χ²(df)</span><span><span class="sw box" style="background:rgba(185,28,28,.3)"></span>rejection region (area α)</span><span><span class="sw" style="background:var(--plum)"></span>observed χ²</span></div>
+      <div class="note" id="testNote"></div>
+    </div>
+  </section>
+
+  <!-- ============ 4 · SIMULATION CHECK ============ -->
+  <section class="panel" id="p-sim">
+    <div class="card">
+      <h2>Permutation test</h2>
+      <p class="muted">To check the χ² approximation without formulas, I shuffle the F column among the records. This breaks any link between X and F but keeps both marginals, so each shuffled table is a dataset where H₀ is true. I repeat it <span id="bTxt">1,000</span> times and see how often the shuffled χ² is at least as large as the observed one.</p>
+      <canvas class="ch l" id="cPerm" style="margin-top:.8rem"></canvas>
+      <div class="legend"><span><span class="sw box" style="background:rgba(4,120,87,.4)"></span>χ² of the shuffled tables</span><span style="color:var(--ink)"><span class="sw" style="background:var(--ink)"></span>theoretical χ²(df) density</span><span><span class="sw" style="background:var(--plum)"></span>observed χ²</span><span><span class="sw dash" style="color:var(--red)"></span>critical value</span></div>
+      <div class="kpi" style="margin-top:.6rem" id="permKpi"></div>
+      <div style="margin-top:.7rem"><button type="button" id="permBtn">Shuffle again</button></div>
+      <div class="note" id="permNote"></div>
+    </div>
+
+    <div class="card">
+      <h2>How χ² depends on n</h2>
+      <p class="muted">Same proportions, more records. For each n I simulate 200 datasets from the model of the selected dataset (for "my own table": from its observed proportions) and record the average χ² and how often H₀ is rejected.</p>
+      <canvas class="ch l" id="cN" style="margin-top:.8rem"></canvas>
+      <div class="legend"><span><span class="sw" style="background:var(--plum)"></span>average simulated χ²</span><span style="color:var(--ink)"><span class="sw dash"></span>approximation df + n·φ²</span><span><span class="sw dash" style="color:var(--red)"></span>critical value</span></div>
+      <div class="scroll" style="margin-top:.6rem"><table id="powTbl"></table></div>
+      <div class="note" id="powNote"></div>
+    </div>
+  </section>
+
+  <!-- ============ 5 · THEORY ============ -->
+  <section class="panel" id="p-theory">
+    <div class="card disc">
+      <h2>Independence of events</h2>
+      <p>Two events A and B are independent if knowing that one happened does not change the probability of the other:</p>
+      <div class="deriv"><span class="key">P(A ∩ B) = P(A) · P(B)</span>      equivalently, if P(B) &gt; 0:   P(A | B) = P(A)</div>
+      <p>Independence is not the same as being disjoint: two disjoint events with positive probability are actually dependent, because if B happens then A cannot happen (P(A | B) = 0 ≠ P(A)). For more than two events we need the product rule for every sub-family (mutual independence); pairwise independence is not enough.</p>
+    </div>
+
+    <div class="card disc">
+      <h2>Independence of random variables</h2>
+      <p>X and F are independent if every event about X is independent of every event about F. For discrete variables this reduces to the joint distribution being the product of the marginals:</p>
+      <div class="deriv">p(x, f) = p_X(x) · p_F(f)   for all x, f      ⇔      p(f | x) = p_F(f)   for all x</div>
+      <p>So all the conditional distributions of F given X are equal (and equal to the marginal). In general the same holds with the CDFs, F(x, y) = F_X(x)·F_Y(y), or with the densities for continuous variables. Independence implies zero covariance, but not the other way around: Cov = 0 only excludes a linear relation.</p>
+    </div>
+
+    <div class="card disc">
+      <h2>Independence in a dataset</h2>
+      <p>With data we have frequencies instead of probabilities. X and F are <i>statistically independent</i> in the data when the joint relative frequencies are the product of the marginal ones:</p>
+      <div class="deriv">fᵢⱼ = fᵢ· · f·ⱼ   ⇔   nᵢⱼ = nᵢ· · n·ⱼ / n   ⇔   all row profiles are equal</div>
+      <p>In a sample this almost never holds exactly, even when the variables are independent in the population, because of random fluctuations. The question is whether the differences between observed and expected counts are too large to be just noise. That is what the χ² test measures.</p>
+    </div>
+
+    <div class="card disc">
+      <h2>The χ² test of independence</h2>
+      <ul>
+        <li><b>Statistic.</b> χ² = Σ (O − E)²/E sums the squared differences, each scaled by E (for a count, the variance is about its mean). It is 0 exactly when the table is perfectly independent.</li>
+        <li><b>Distribution.</b> Under H₀ and for large n, χ² is approximately χ² with (r − 1)(c − 1) degrees of freedom: the r·c cells minus the constraints given by the estimated margins (1 for n, r − 1 for the rows, c − 1 for the columns).</li>
+        <li><b>p-value.</b> The probability, if H₀ is true, of a χ² at least as large as the one observed. If p &lt; α we reject independence. The p-value is not the probability that H₀ is true, and a large p does not prove independence; it only means the data are compatible with it.</li>
+        <li><b>Conditions.</b> The records should be independent of each other, and the expected counts not too small (the usual rule is E ≥ 5 in all, or at least 80%, of the cells). Otherwise one can merge categories or use an exact or permutation test (tab 4).</li>
+        <li><b>Strength.</b> χ² grows with n, so it does not measure how strong the link is. Cramér's V = √(χ²/(n(min(r, c) − 1))) is between 0 (independent) and 1 (F completely determined by X, or vice versa).</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 6 · ASSOCIATION VS CAUSALITY ============ -->
+  <section class="panel" id="p-cause">
+    <div class="card">
+      <h2>An example: does an EDR agent cause compromises?</h2>
+      <p class="muted">Invented data on 2,500 machines of a company: whether they have an EDR (endpoint detection and response) agent, and whether they were compromised during the year.</p>
+      <div class="scroll" style="margin-top:.6rem"><table id="simTbl"></table></div>
+      <div class="note bad" id="simNote1"></div>
+    </div>
+
+    <div class="card">
+      <h2>Splitting by type of machine</h2>
+      <p class="muted">The same 2,500 machines, separated into internet-facing servers and internal laptops.</p>
+      <div class="grid2" style="margin-top:.6rem">
+        <div class="scroll"><table id="simS"></table></div>
+        <div class="scroll"><table id="simL"></table></div>
+      </div>
+      <div class="note good" id="simNote2"></div>
+    </div>
+
+    <div class="card disc">
+      <h2>Association is not causation</h2>
+      <ul>
+        <li><b>Confounding.</b> In the example the type of machine influences both variables: servers get the EDR more often and are attacked much more. Ignoring it, the association has the wrong sign (Simpson's paradox).</li>
+        <li><b>Direction.</b> The χ² test is symmetric in X and F: it says that the variables are linked, not which one influences the other.</li>
+        <li><b>Chance and multiple tests.</b> With α = 0.05, one test out of 20 rejects a true H₀. If many pairs of variables are tested, some "significant" associations are just noise.</li>
+        <li><b>Significant is not important.</b> With a lot of data even a tiny difference gives a small p-value (tab 4); Cramér's V and the conditional percentages say whether it matters.</li>
+        <li><b>What would show causality.</b> A controlled experiment (assigning the EDR at random, so that nothing else can differ between the groups), or at least an analysis that accounts for the confounders, a plausible mechanism and the right time order.</li>
+      </ul>
+    </div>
+
+    <div class="card disc">
+      <h2>Conclusions</h2>
+      <div class="scroll"><table id="concTbl"></table></div>
+      <ul id="concList" style="margin-top:.6rem"></ul>
+    </div>
+  </section>
+
+  </main>
+</div>
+
+<script>
+(function () {
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fmtN = v => v.toLocaleString('en');
+const pct = v => (100 * v).toFixed(1) + '%';
+const f3 = v => Number.isFinite(v) ? v.toFixed(3) : '–';
+const fp = p => !Number.isFinite(p) ? '–' : p === 0 ? '< 1e-300' : p < 1e-4 ? p.toExponential(2) : p.toFixed(4);
+const sup = n => String(n).replace(/./g, c => '⁰¹²³⁴⁵⁶⁷⁸⁹'[c] || (c === '-' ? '⁻' : c));
+function rng(seed) {
+  let a = seed >>> 0;
+  return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+
+/* ===================================================================
+   Small canvas chart helper (same as Homework 4–6)
+   =================================================================== */
+const C = { plum: '#8A2C5C', pink: '#C77DA3', ink: '#1B2340', green: '#047857', grey: '#9AA0AE', amber: '#B7791F', red: '#b91c1c' };
+const CAT = ['#8A2C5C', '#047857', '#B7791F', '#2A3456', '#C77DA3', '#5B8DB8', '#9AA0AE', '#6B4E9B'];
+function niceTicks(lo, hi, log, count = 6) {
+  if (log) {
+    const t = [], k0 = Math.ceil(Math.log10(lo) - 1e-9), k1 = Math.floor(Math.log10(hi) + 1e-9);
+    for (let k = k0; k <= k1; k++) t.push(10 ** k);
+    return t.length ? t : [lo, hi];
+  }
+  const span = hi - lo; if (!(span > 0)) return [lo];
+  const raw = span / count, mag = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 2.5, 5, 10].map(f => f * mag).find(s => s >= raw);
+  const out = [];
+  for (let v = Math.ceil(lo / step - 1e-9) * step; v <= hi + step * 1e-9; v += step) out.push(Math.abs(v) < step * 1e-9 ? 0 : +v.toPrecision(12));
+  return out;
+}
+const tickLab = v => {
+  const a = Math.abs(v);
+  if (a === 0) return '0';
+  if (a >= 1e5 || a < 1e-3) { const e = Math.round(Math.log10(a)); return Math.abs(a - 10 ** e) < 1e-9 * a ? '10' + sup(e) : v.toExponential(0); }
+  return String(+v.toPrecision(4));
+};
+function chart(cv, o) {
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  const g = cv.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  const M = { l: o.ml ?? 56, r: 24, t: 10, b: o.mb ?? 36 }, pw = w - M.l - M.r, ph = h - M.t - M.b;
+  const tx = o.logx ? Math.log10 : v => v, ty = o.logy ? Math.log10 : v => v;
+  let [xa, xb] = o.x, [ya, yb] = o.y;
+  if (!(xb > xa)) xb = xa + 1;
+  if (!(yb > ya)) yb = ya + 1;
+  const X = v => M.l + (tx(v) - tx(xa)) / (tx(xb) - tx(xa)) * pw;
+  const Y = v => M.t + ph - (ty(v) - ty(ya)) / (ty(yb) - ty(ya)) * ph;
+  g.font = '10.5px "JetBrains Mono", monospace'; g.lineWidth = 1;
+  g.strokeStyle = '#ECEEE6'; g.fillStyle = '#5C6478';
+  g.textAlign = 'center';
+  niceTicks(xa, xb, o.logx, o.xticks || 6).forEach(v => {
+    g.beginPath(); g.moveTo(X(v), M.t); g.lineTo(X(v), M.t + ph); g.stroke();
+    g.fillText(tickLab(v), X(v), M.t + ph + 14);
+  });
+  g.textAlign = 'right';
+  niceTicks(ya, yb, o.logy, 5).forEach(v => {
+    g.beginPath(); g.moveTo(M.l, Y(v)); g.lineTo(M.l + pw, Y(v)); g.stroke();
+    g.fillText(tickLab(v), M.l - 6, Y(v) + 4);
+  });
+  g.strokeStyle = '#C9CDBF'; g.beginPath(); g.moveTo(M.l, M.t + ph); g.lineTo(M.l + pw, M.t + ph); g.stroke();
+  g.font = '12px "Bricolage Grotesque", system-ui, sans-serif'; g.fillStyle = '#5C6478';
+  if (o.xl) { g.textAlign = 'right'; g.fillText(o.xl, M.l + pw, h - 4); }
+  if (o.yl) { g.save(); g.translate(13, M.t + ph / 2); g.rotate(-Math.PI / 2); g.textAlign = 'center'; g.fillText(o.yl, 0, 0); g.restore(); }
+  const clip = fn => { g.save(); g.beginPath(); g.rect(M.l, M.t, pw, ph); g.clip(); fn(); g.restore(); };
+  const api = {
+    X, Y, g,
+    line(pts, col, op = {}) {
+      clip(() => {
+        g.strokeStyle = col; g.lineWidth = op.w || 1.6; g.setLineDash(op.dash ? [6, 4] : []);
+        g.beginPath(); let pen = false;
+        pts.forEach(q => { if (!Number.isFinite(q[1])) { pen = false; return; } pen ? g.lineTo(X(q[0]), Y(q[1])) : g.moveTo(X(q[0]), Y(q[1])); pen = true; });
+        g.stroke(); g.setLineDash([]);
+        if (op.dots) { g.fillStyle = col; pts.forEach(q => { if (Number.isFinite(q[1])) { g.beginPath(); g.arc(X(q[0]), Y(q[1]), op.r || 3, 0, 7); g.fill(); } }); }
+      });
+    },
+    rect(x0, x1, y0, y1, fill) {
+      clip(() => { g.fillStyle = fill; g.fillRect(X(x0), Y(y1), X(x1) - X(x0), Y(y0) - Y(y1)); });
+    },
+    area(pts, y0, fill) {
+      if (!pts.length) return;
+      clip(() => {
+        g.fillStyle = fill; g.beginPath(); g.moveTo(X(pts[0][0]), Y(y0));
+        pts.forEach(q => g.lineTo(X(q[0]), Y(q[1])));
+        g.lineTo(X(pts.at(-1)[0]), Y(y0)); g.closePath(); g.fill();
+      });
+    },
+    hline(v, col, dash) { api.line([[xa, v], [xb, v]], col, { dash, w: 1.4 }); },
+    vline(v, col, dash, w = 2) { api.line([[v, ya], [v, yb]], col, { dash, w }); },
+    label(txt, x, y, col, align = 'left') { g.font = '600 11px "Bricolage Grotesque", system-ui, sans-serif'; g.fillStyle = col; g.textAlign = align; g.fillText(txt, x, y); }
+  };
+  return api;
+}
+
+/* ===================================================================
+   χ² distribution: log-gamma (Lanczos), regularized incomplete gamma
+   =================================================================== */
+function lgamma(z) {
+  const c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+  if (z < 0.5) return Math.log(Math.PI / Math.abs(Math.sin(Math.PI * z))) - lgamma(1 - z);
+  z -= 1;
+  let x = c[0];
+  for (let i = 1; i < 9; i++) x += c[i] / (z + i);
+  const t = z + 7.5;
+  return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(x);
+}
+// upper regularized gamma Q(a, x) = Γ(a, x)/Γ(a): series for x < a + 1, continued fraction otherwise
+function gammaQ(a, x) {
+  if (x <= 0) return 1;
+  const lpre = -x + a * Math.log(x) - lgamma(a);
+  if (x < a + 1) {
+    let ap = a, sum = 1 / a, del = sum;
+    for (let i = 0; i < 1000; i++) { ap++; del *= x / ap; sum += del; if (Math.abs(del) < Math.abs(sum) * 1e-15) break; }
+    return Math.max(0, 1 - sum * Math.exp(lpre));
+  }
+  let b = x + 1 - a, c = 1e300, d = 1 / b, h = d;
+  for (let i = 1; i < 1000; i++) {
+    const an = -i * (i - a); b += 2;
+    d = an * d + b; if (Math.abs(d) < 1e-300) d = 1e-300;
+    c = b + an / c; if (Math.abs(c) < 1e-300) c = 1e-300;
+    d = 1 / d; const del = d * c; h *= del;
+    if (Math.abs(del - 1) < 1e-15) break;
+  }
+  return Math.exp(lpre) * h;
+}
+const chiSf = (x, k) => gammaQ(k / 2, x / 2);                        // P(χ²_k ≥ x)
+const chiPdf = (x, k) => x <= 0 ? (k === 2 ? 0.5 : k < 2 ? Infinity : 0) : Math.exp((k / 2 - 1) * Math.log(x) - x / 2 - (k / 2) * Math.LN2 - lgamma(k / 2));
+function chiCrit(alpha, k) {                                          // x with P(χ²_k ≥ x) = α (bisection)
+  let lo = 0, hi = k + 20 * Math.sqrt(2 * k) + 40;
+  for (let i = 0; i < 100; i++) { const m = (lo + hi) / 2; chiSf(m, k) > alpha ? lo = m : hi = m; }
+  return (lo + hi) / 2;
+}
+
+/* ===================================================================
+   Datasets. q = "dependent" joint weights; the generator mixes it with
+   the product of its own marginals:  p = (1 − λ)·(row ⊗ col) + λ·q
+   so that λ changes the link but not the marginal distributions.
+   =================================================================== */
+const DATASETS = [
+  { id: 'soc', name: 'SOC alerts: attack type × outcome', X: 'attack type', F: 'outcome',
+    rows: ['Phishing', 'Brute force', 'Malware', 'Web exploit', 'DDoS'], cols: ['Blocked', 'Detected late', 'Breach'],
+    q: [[180, 90, 30], [260, 30, 10], [120, 70, 35], [70, 45, 25], [140, 20, 5]], lam: 100,
+    note: 'Alerts of a security operations centre. For each alert: the type of attack (X) and how it ended (F). I expect a link: brute-force and DDoS are usually stopped automatically, while malware and web exploits more often end in a breach.' },
+  { id: 'mfa', name: 'Logins: time of day × MFA result', X: 'time of day', F: 'MFA result',
+    rows: ['Night 0–6', 'Morning 6–12', 'Afternoon 12–18', 'Evening 18–24'], cols: ['Passed', 'Failed', 'Not prompted'],
+    q: [[40, 22, 8], [300, 25, 35], [280, 20, 40], [150, 18, 22]], lam: 100,
+    note: 'Login events of a VPN gateway. X is the time slot of the login, F the result of the multi-factor authentication. Night logins are few but fail much more often (stolen credentials tried at night?).' },
+  { id: 'phi', name: 'Phishing drill: department × reaction', X: 'department', F: 'reaction',
+    rows: ['IT', 'Finance', 'HR', 'Sales'], cols: ['Clicked', 'Reported', 'Ignored'],
+    q: [[8, 55, 37], [18, 30, 52], [20, 28, 52], [22, 25, 53]], lam: 100,
+    note: 'A simulated phishing campaign sent to all employees. X is the department, F what the employee did with the email. The link is weaker: mainly IT reports more and clicks less. Try n = 60 and n = 1,200.' },
+  { id: 'os', name: 'Endpoints: OS × weekday/weekend', X: 'operating system', F: 'day',
+    rows: ['Windows', 'Linux', 'macOS'], cols: ['Weekday', 'Weekend'],
+    q: [[50, 15], [16, 9], [6, 4]], lam: 0,
+    note: 'Malware detections by operating system (X) and by type of day (F). Here the generator starts at link strength 0%, so X and F are independent by construction: the test should usually not reject H₀.' },
+  { id: 'custom', name: 'My own dataset (paste records or counts)', X: 'X', F: 'F', custom: true, note: 'Any bivariate categorical dataset: paste the raw records (one pair x, f per line) or a table of counts. The data are used as they are, so n, seed and strength are not used.' }
+];
+DATASETS.forEach((d, i) => $('ds').insertAdjacentHTML('beforeend', `<option value="${i}">${esc(d.name)}</option>`));
+const EX_TABLE = `, Compromised, Not compromised
+VPN always on, 14, 486
+VPN sometimes, 22, 278
+No VPN, 31, 169`;
+// example of raw records: patch delay of a server × whether it was exploited (150 servers, shuffled)
+const EX_RECORDS = (() => {
+  const xs = ['<= 7 days', '8-30 days', '> 30 days'], fs = ['exploited', 'not exploited'], cnt = [[3, 57], [7, 43], [12, 28]], out = [];
+  cnt.forEach((r, i) => r.forEach((v, j) => { for (let k = 0; k < v; k++) out.push(`${xs[i]}, ${fs[j]}`); }));
+  const rnd = rng(11);
+  for (let k = out.length - 1; k > 0; k--) { const m = Math.floor(rnd() * (k + 1)); [out[k], out[m]] = [out[m], out[k]]; }
+  return 'patch delay, outcome\n' + out.join('\n');
+})();
+$('customTxt').value = EX_RECORDS;
+let custom = parseCustom(EX_RECORDS, 'rec').t;
+
+function parseCustom(txt, fmt) {
+  return fmt === 'rec' ? parseRecords(txt) : parseTable(txt);
+}
+// one record per line "x, f"; the first line is the header with the names of the two variables
+function parseRecords(txt) {
+  const lines = txt.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (lines.length < 3) return { err: 'I need a header line and at least two records.' };
+  const head = lines[0].split(/[,;\t]/).map(s => s.trim());
+  if (head.length !== 2) return { err: 'The header must have exactly two names, e.g. "X, F".' };
+  if (lines.length - 1 > 200000) return { err: 'Please keep it below 200,000 records.' };
+  const rows = [], cols = [], ri = new Map(), ci = new Map(), xs = [], fs = [];
+  for (let k = 1; k < lines.length; k++) {
+    const p = lines[k].split(/[,;\t]/).map(s => s.trim());
+    if (p.length !== 2 || !p[0] || !p[1]) return { err: `Line ${k + 1} ("${lines[k]}") must contain exactly two values.` };
+    if (!ri.has(p[0])) { ri.set(p[0], rows.length); rows.push(p[0]); }
+    if (!ci.has(p[1])) { ci.set(p[1], cols.length); cols.push(p[1]); }
+    xs.push(ri.get(p[0])); fs.push(ci.get(p[1]));
+  }
+  if (rows.length < 2 || cols.length < 2) return { err: 'Each variable needs at least two different values.' };
+  const counts = rows.map(() => cols.map(() => 0));
+  xs.forEach((x, k) => counts[x][fs[k]]++);
+  return { t: { rows, cols, counts, xs, fs, X: head[0], F: head[1] } };
+}
+function parseTable(txt) {
+  const lines = txt.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (lines.length < 3) return { err: 'I need a header line and at least two rows.' };
+  const cols = lines[0].split(/[,;\t]/).map(s => s.trim()).filter((s, i) => i > 0 || s !== '');
+  if (lines[0].split(/[,;\t]/)[0].trim() !== '') cols.shift();
+  if (cols.length < 2) return { err: 'I need at least two columns.' };
+  const rows = [], counts = [];
+  for (const l of lines.slice(1)) {
+    const p = l.split(/[,;\t]/).map(s => s.trim());
+    const v = p.slice(1).map(Number);
+    if (v.length !== cols.length || v.some(x => !Number.isInteger(x) || x < 0)) return { err: `Line "${l}" must have ${cols.length} non-negative whole numbers.` };
+    rows.push(p[0] || `row ${rows.length + 1}`); counts.push(v);
+  }
+  const n = counts.flat().reduce((a, b) => a + b, 0);
+  if (n === 0) return { err: 'All the counts are zero.' };
+  if (n > 200000) return { err: 'Please keep the total below 200,000.' };
+  return { t: { rows, cols, counts, X: 'X', F: 'F' } };
+}
+
+// model probabilities of a dataset for a given strength λ ∈ [0, 1]
+function model(d, lam) {
+  const tot = d.q.flat().reduce((a, b) => a + b, 0);
+  const q = d.q.map(r => r.map(v => v / tot));
+  const r = q.map(row => row.reduce((a, b) => a + b, 0));
+  const c = d.cols.map((_, j) => q.reduce((a, row) => a + row[j], 0));
+  return q.map((row, i) => row.map((v, j) => (1 - lam) * r[i] * c[j] + lam * v));
+}
+function sampler(p, rnd) {
+  const cells = [], cum = [];
+  let s = 0;
+  p.forEach((row, i) => row.forEach((v, j) => { s += v; cells.push([i, j]); cum.push(s); }));
+  return () => { const u = rnd() * s; let k = 0; while (k < cum.length - 1 && u >= cum[k]) k++; return cells[k]; };
+}
+
+/* ===================================================================
+   Analysis of a contingency table
+   =================================================================== */
+function analyse(rowsL, colsL, O, alpha) {
+  // categories that never appear are dropped (their expected counts would be 0)
+  const ri = rowsL.map((_, i) => i).filter(i => O[i].some(v => v > 0));
+  const ci = colsL.map((_, j) => j).filter(j => O.some(r => r[j] > 0));
+  const rows = ri.map(i => rowsL[i]), cols = ci.map(j => colsL[j]);
+  const T = ri.map(i => ci.map(j => O[i][j]));
+  const R = T.map(r => r.reduce((a, b) => a + b, 0));
+  const Cs = cols.map((_, j) => T.reduce((a, r) => a + r[j], 0));
+  const n = R.reduce((a, b) => a + b, 0);
+  const E = R.map(ri2 => Cs.map(cj => ri2 * cj / n));
+  let chi = 0;
+  const contrib = T.map((r, i) => r.map((o, j) => { const v = (o - E[i][j]) ** 2 / E[i][j]; chi += v; return v; }));
+  // adjusted residual: (O − E)/√(E(1 − fᵢ·)(1 − f·ⱼ)), approximately N(0, 1) under independence
+  const resid = T.map((r, i) => r.map((o, j) => (o - E[i][j]) / Math.sqrt(E[i][j] * (1 - R[i] / n) * (1 - Cs[j] / n))));
+  const df = (rows.length - 1) * (cols.length - 1);
+  const p = df > 0 ? chiSf(chi, df) : 1;
+  const crit = df > 0 ? chiCrit(alpha, df) : 0;
+  const V = df > 0 ? Math.sqrt(chi / (n * (Math.min(rows.length, cols.length) - 1))) : 0;
+  const low = E.flat().filter(e => e < 5).length;
+  const dropped = rowsL.length - rows.length + colsL.length - cols.length;
+  return { rows, cols, T, R, Cs, n, E, chi, contrib, resid, df, p, crit, V, low, cells: rows.length * cols.length, dropped, alpha };
+}
+
+/* ===================================================================
+   State: generate the records, build the table, run the test
+   =================================================================== */
+let S = null;
+function params() {
+  const d = DATASETS[Number($('ds').value)];
+  let seed = Math.floor(Number($('seed').value));
+  if (!Number.isFinite(seed) || seed < 1) seed = 78;
+  return { d, n: Number($('n').value), seed, lam: Number($('lam').value) / 100, alpha: Number($('alpha').value) };
+}
+function compute() {
+  const P = params(), d = P.d;
+  let rows, cols, xs, fs, p;
+  if (d.custom) {
+    ({ rows, cols } = custom);
+    d.X = custom.X; d.F = custom.F;
+    if (custom.xs) { xs = custom.xs.slice(); fs = custom.fs.slice(); }   // raw records: used in their order
+    else {
+      xs = []; fs = [];
+      custom.counts.forEach((r, i) => r.forEach((v, j) => { for (let k = 0; k < v; k++) { xs.push(i); fs.push(j); } }));
+      // a table of counts is expanded into records and shuffled, so the preview looks like a log
+      const rnd = rng(P.seed);
+      for (let k = xs.length - 1; k > 0; k--) { const m = Math.floor(rnd() * (k + 1)); [xs[k], xs[m]] = [xs[m], xs[k]]; [fs[k], fs[m]] = [fs[m], fs[k]]; }
+    }
+    const tot = xs.length;
+    p = custom.counts.map(r => r.map(v => v / tot));
+  } else {
+    rows = d.rows; cols = d.cols;
+    p = model(d, P.lam);
+    const draw = sampler(p, rng(P.seed));
+    xs = new Array(P.n); fs = new Array(P.n);
+    for (let k = 0; k < P.n; k++) { const [i, j] = draw(); xs[k] = i; fs[k] = j; }
+  }
+  // build the contingency table from the raw records (what tab 1 shows)
+  const O = rows.map(() => cols.map(() => 0));
+  for (let k = 0; k < xs.length; k++) O[xs[k]][fs[k]]++;
+  const A = analyse(rows, cols, O, P.alpha);
+  S = { ...P, rows, cols, xs, fs, p, O, A };
+  $('sChi').textContent = A.chi.toFixed(2);
+  $('sDf').textContent = A.df;
+  $('sP').textContent = fp(A.p);
+  const dep = A.df > 0 && A.p < P.alpha;
+  $('sVer').className = 'verdict ' + (dep ? 'dep' : 'ind');
+  $('sVer').textContent = A.df === 0 ? 'Not enough categories to test' : dep ? `p < ${P.alpha}: reject independence` : `p ≥ ${P.alpha}: independence not rejected`;
+}
+
+/* ===================================================================
+   Tab 1
+   =================================================================== */
+function drawData() {
+  const { d, rows, cols, xs, fs, O, A, lam, n } = S;
+  $('dsTitle').textContent = d.name;
+  $('dsNote').textContent = d.note;
+  $('customCard').hidden = !d.custom;
+  $('dsKpi').innerHTML = `
+    <div><b>${fmtN(xs.length)}</b>records</div>
+    <div><b>${rows.length} × ${cols.length}</b>categories of X × F</div>
+    <div><b>${d.custom ? '–' : Math.round(lam * 100) + '%'}</b>link strength used</div>
+    <div><b>${A.chi.toFixed(2)}</b>χ² (tab 3)</div>`;
+
+  // raw records: first 10 lines of the "log"
+  const start = Date.UTC(2026, 10, 2, 0, 0, 0), rnd = rng(S.seed + 7);
+  let t = start, body = '';
+  const shown = Math.min(10, xs.length);
+  for (let k = 0; k < shown; k++) {
+    t += Math.floor(rnd() * 900 + 30) * 1000;
+    const ts = new Date(t).toISOString().slice(5, 19).replace('T', ' ');
+    body += `<tr><td class="m">${k + 1}</td>${d.custom ? '' : `<td class="m">${ts}</td>`}<td>${esc(rows[xs[k]])}</td><td>${esc(cols[fs[k]])}</td></tr>`;
+  }
+  $('rawTbl').innerHTML = `<thead><tr><th class="m">#</th>${d.custom ? '' : '<th class="m">time</th>'}<th>X = ${esc(d.X)}</th><th>F = ${esc(d.F)}</th></tr></thead><tbody>${body}` +
+    (xs.length > shown ? `<tr><td class="m">…</td>${d.custom ? '' : '<td class="m">…</td>'}<td colspan="2" class="muted">${fmtN(xs.length - shown)} more records</td></tr>` : '') + '</tbody>';
+  $('rawCap').textContent = d.custom
+    ? (custom.xs ? 'The records as you pasted them.' : 'The table of counts is expanded into one record per case, then shuffled.')
+    : `Generated with seed ${S.seed}: each record is a random pair (x, f) drawn from the model of the dataset.`;
+
+  $('code').innerHTML =
+`<span class="dim">// records = [{ x: 'Phishing', f: 'Blocked' }, …]</span>
+<span class="hl">const</span> rowIdx = <span class="hl">new</span> Map(rows.map((r, i) =&gt; [r, i]));
+<span class="hl">const</span> colIdx = <span class="hl">new</span> Map(cols.map((c, j) =&gt; [c, j]));
+<span class="hl">const</span> table = rows.map(() =&gt; cols.map(() =&gt; 0));
+
+<span class="hl">for</span> (<span class="hl">const</span> rec <span class="hl">of</span> records) {
+  table[rowIdx.get(rec.x)][colIdx.get(rec.f)]++;
+}
+<span class="hl">const</span> rowTot = table.map(r =&gt; sum(r));
+<span class="hl">const</span> colTot = cols.map((_, j) =&gt; sum(table.map(r =&gt; r[j])));`;
+
+  const N = xs.length;
+  const R = O.map(r => r.reduce((a, b) => a + b, 0)), Cs = cols.map((_, j) => O.reduce((a, r) => a + r[j], 0));
+  $('ctTbl').innerHTML = `<thead><tr><th>${esc(d.X)} \\ ${esc(d.F)}</th>${cols.map(c => `<th class="m">${esc(c)}</th>`).join('')}<th class="m">total nᵢ·</th></tr></thead><tbody>` +
+    rows.map((r, i) => `<tr><td>${esc(r)}</td>${O[i].map(v => `<td class="m">${fmtN(v)}</td>`).join('')}<td class="m tot">${fmtN(R[i])}</td></tr>`).join('') +
+    `<tr class="tot"><td>total n·ⱼ</td>${Cs.map(v => `<td class="m">${fmtN(v)}</td>`).join('')}<td class="m">${fmtN(N)}</td></tr></tbody>`;
+  $('relTbl').innerHTML = `<thead><tr><th>${esc(d.X)} \\ ${esc(d.F)}</th>${cols.map(c => `<th class="m">${esc(c)}</th>`).join('')}<th class="m">fᵢ·</th></tr></thead><tbody>` +
+    rows.map((r, i) => `<tr><td>${esc(r)}</td>${O[i].map(v => `<td class="m">${f3(v / N)}</td>`).join('')}<td class="m tot">${f3(R[i] / N)}</td></tr>`).join('') +
+    `<tr class="tot"><td>f·ⱼ</td>${Cs.map(v => `<td class="m">${f3(v / N)}</td>`).join('')}<td class="m">1.000</td></tr></tbody>`;
+}
+
+/* ===================================================================
+   Tab 2
+   =================================================================== */
+function stackHTML(label, parts, colors, cls = '') {
+  return `<div class="bar ${cls}"><span title="${esc(label)}">${esc(label)}</span><div class="stack">${parts.map((v, k) => `<i style="width:${(100 * v).toFixed(2)}%;background:${colors[k % colors.length]}" title="${pct(v)}">${v >= 0.08 ? Math.round(100 * v) + '%' : ''}</i>`).join('')}</div></div>`;
+}
+function drawCond() {
+  const { d, A } = S, { rows, cols, T, R, Cs, n } = A;
+  $('rowLeg').innerHTML = cols.map((c, j) => `<span><span class="sw box" style="background:${CAT[j % CAT.length]}"></span>${esc(c)}</span>`).join('');
+  $('rowBars').innerHTML = rows.map((r, i) => stackHTML(r, T[i].map(v => v / R[i]), CAT)).join('') + stackHTML('all (marginal)', Cs.map(v => v / n), CAT, 'all');
+  $('rowTbl').innerHTML = `<thead><tr><th>${esc(d.X)}</th>${cols.map(c => `<th class="m">f(${esc(c)} | X)</th>`).join('')}<th class="m">nᵢ·</th></tr></thead><tbody>` +
+    rows.map((r, i) => `<tr><td>${esc(r)}</td>${T[i].map((v, j) => { const diff = v / R[i] - Cs[j] / n; return `<td class="m">${pct(v / R[i])}<small>${diff >= 0 ? '+' : ''}${(100 * diff).toFixed(1)} pts</small></td>`; }).join('')}<td class="m">${fmtN(R[i])}</td></tr>`).join('') +
+    `<tr class="tot"><td>marginal f·ⱼ</td>${Cs.map(v => `<td class="m">${pct(v / n)}</td>`).join('')}<td class="m">${fmtN(n)}</td></tr></tbody>`;
+
+  const XC = ['#2A3456', '#8A2C5C', '#047857', '#B7791F', '#C77DA3', '#5B8DB8', '#9AA0AE', '#6B4E9B'];
+  $('colLeg').innerHTML = rows.map((r, i) => `<span><span class="sw box" style="background:${XC[i % XC.length]}"></span>${esc(r)}</span>`).join('');
+  $('colBars').innerHTML = cols.map((c, j) => stackHTML(c, T.map(r => r[j] / Cs[j]), XC)).join('') + stackHTML('all (marginal)', R.map(v => v / n), XC, 'all');
+  $('colTbl').innerHTML = `<thead><tr><th>${esc(d.X)}</th>${cols.map(c => `<th class="m">f(X | ${esc(c)})</th>`).join('')}<th class="m">marginal fᵢ·</th></tr></thead><tbody>` +
+    rows.map((r, i) => `<tr><td>${esc(r)}</td>${cols.map((_, j) => `<td class="m">${pct(T[i][j] / Cs[j])}</td>`).join('')}<td class="m tot">${pct(R[i] / n)}</td></tr>`).join('') + '</tbody>';
+
+  // largest gap between a row profile and the marginal
+  let best = { v: 0 };
+  rows.forEach((r, i) => cols.forEach((c, j) => { const g = T[i][j] / R[i] - Cs[j] / n; if (Math.abs(g) > Math.abs(best.v)) best = { v: g, r, c, i, j }; }));
+  $('condNote').innerHTML = best.r === undefined ? 'All the row profiles are identical: the table is exactly independent.' :
+    `The largest difference is for <b>${esc(best.r)}</b>: ${esc(best.c)} is ${pct(T[best.i][best.j] / R[best.i])} of its cases, against ${pct(Cs[best.j] / n)} overall (${best.v > 0 ? '+' : ''}${(100 * best.v).toFixed(1)} percentage points). ` +
+    (A.p < S.alpha ? 'The profiles are clearly different from each other, so knowing X changes what I expect for F: this already suggests dependence. Tab 3 checks whether the differences are larger than random noise.'
+      : 'The profiles are fairly similar. The differences could be just random fluctuations: tab 3 checks it with the χ² test.');
+}
+
+/* ===================================================================
+   Tab 3
+   =================================================================== */
+function drawChi() {
+  const { d, A, alpha } = S, { rows, cols, T, E, contrib, resid, chi, df, p, crit, V, n, low, cells, dropped } = A;
+  $('expTbl').innerHTML = `<thead><tr><th>${esc(d.X)} \\ ${esc(d.F)}</th>${cols.map(c => `<th class="m">${esc(c)}</th>`).join('')}<th class="m">nᵢ·</th></tr></thead><tbody>` +
+    rows.map((r, i) => `<tr><td>${esc(r)}</td>${E[i].map((e, j) => `<td class="m ${e < 5 ? 'low' : ''}">${e.toFixed(2)}<small>O = ${fmtN(T[i][j])}</small></td>`).join('')}<td class="m tot">${fmtN(A.R[i])}</td></tr>`).join('') +
+    `<tr class="tot"><td>n·ⱼ</td>${A.Cs.map(v => `<td class="m">${fmtN(v)}</td>`).join('')}<td class="m">${fmtN(n)}</td></tr></tbody>`;
+  $('expNote').innerHTML = (low === 0 ? 'All expected counts are at least 5, so the χ² approximation is fine.'
+    : `<b style="color:var(--red)">${low} of ${cells} cells have E &lt; 5.</b> The χ² p-value is only approximate here; the permutation test in tab 4 does not need this condition.`) +
+    (dropped ? ` (${dropped} categor${dropped > 1 ? 'ies' : 'y'} with no records ${dropped > 1 ? 'were' : 'was'} removed.)` : '');
+
+  const cmax = Math.max(...contrib.flat(), 1e-12);
+  $('contTbl').innerHTML = `<thead><tr><th>${esc(d.X)} \\ ${esc(d.F)}</th>${cols.map(c => `<th class="m">${esc(c)}</th>`).join('')}<th class="m">row total</th></tr></thead><tbody>` +
+    rows.map((r, i) => `<tr><td>${esc(r)}</td>${contrib[i].map((v, j) => {
+      const a = (0.08 + 0.6 * v / cmax).toFixed(2), z = resid[i][j];
+      const zc = z > 2 ? 'color:var(--plum);font-weight:700' : z < -2 ? 'color:var(--green);font-weight:700' : '';
+      return `<td class="m" style="background:rgba(138,44,92,${a})">${v.toFixed(2)}<small style="${zc}">z = ${z >= 0 ? '+' : ''}${z.toFixed(2)}</small></td>`;
+    }).join('')}<td class="m tot">${contrib[i].reduce((a, b) => a + b, 0).toFixed(2)}</td></tr>`).join('') +
+    `<tr class="tot"><td>χ²</td>${cols.map((_, j) => `<td class="m">${contrib.reduce((a, r) => a + r[j], 0).toFixed(2)}</td>`).join('')}<td class="m">${chi.toFixed(2)}</td></tr></tbody>`;
+
+  $('testKpi').innerHTML = `
+    <div><b>${chi.toFixed(3)}</b>χ² observed</div>
+    <div><b>${df}</b>degrees of freedom</div>
+    <div><b>${crit.toFixed(3)}</b>critical value, α = ${alpha}</div>
+    <div><b>${fp(p)}</b>p-value</div>
+    <div><b>${V.toFixed(3)}</b>Cramér's V</div>`;
+
+  if (df > 0) {
+    const xmax = Math.max(crit * 1.6, df + 4 * Math.sqrt(2 * df), Math.min(chi * 1.15, crit * 4));
+    const pts = []; for (let i = 0; i <= 400; i++) { const x = xmax * i / 400; pts.push([x, chiPdf(x, df)]); }
+    const ymax = Math.min(0.6, Math.max(...pts.filter(q => q[0] > 0.3).map(q => q[1])) * 1.15);
+    const c = chart($('cChi'), { x: [0, xmax], y: [0, ymax], xl: 'χ²', yl: 'density' });
+    c.area(pts.filter(q => q[0] >= crit), 0, 'rgba(185,28,28,0.3)');
+    c.line(pts, C.ink, { w: 1.8 });
+    c.vline(crit, C.red, true, 1.4);
+    if (chi <= xmax) { c.vline(chi, C.plum, false, 2.4); c.label(`observed ${chi.toFixed(1)}`, Math.min(c.X(chi) + 6, c.X(xmax) - 110), 26, C.plum); }
+    else c.label(`observed χ² = ${chi.toFixed(1)} →  (off the chart)`, c.X(xmax) - 4, 26, C.plum, 'right');
+  }
+  const dep = p < alpha;
+  $('testNote').className = 'note ' + (dep ? 'bad' : 'good');
+  const top = [];
+  rows.forEach((r, i) => cols.forEach((c, j) => { if (Math.abs(resid[i][j]) > 2) top.push([Math.abs(resid[i][j]), `${r} → ${c} (${resid[i][j] > 0 ? 'more' : 'fewer'} than expected)`]); }));
+  top.sort((a, b) => b[0] - a[0]);
+  const strength = V < 0.1 ? 'very weak' : V < 0.2 ? 'weak' : V < 0.35 ? 'moderate' : 'strong';
+  $('testNote').innerHTML = df === 0 ? 'With only one category for X or F there is nothing to test.' : dep
+    ? `χ² = ${chi.toFixed(2)} is larger than the critical value ${crit.toFixed(2)} (p = ${fp(p)} &lt; ${alpha}), so I <b>reject independence</b>: X and F are statistically dependent. Cramér's V = ${V.toFixed(3)} means a ${strength} association. ` + (top.length ? `The cells that contribute most: ${esc(top.slice(0, 3).map(t => t[1]).join('; '))}.` : '')
+    : `χ² = ${chi.toFixed(2)} is below the critical value ${crit.toFixed(2)} (p = ${fp(p)} ≥ ${alpha}), so I <b>cannot reject independence</b>: the differences between O and E are compatible with chance. This does not prove that X and F are independent; with more data a small link could still show up.`;
+}
+
+/* ===================================================================
+   Tab 4
+   =================================================================== */
+let permSeed = 1;
+function chiFixed(xs, fs, r, c, E) {
+  const T = new Float64Array(r * c);
+  for (let k = 0; k < xs.length; k++) T[xs[k] * c + fs[k]]++;
+  let chi = 0;
+  for (let k = 0; k < r * c; k++) if (E[k] > 0) chi += (T[k] - E[k]) ** 2 / E[k];
+  return chi;
+}
+function drawSim() {
+  const { xs, fs, rows, cols, O, A, alpha } = S;
+  if (A.df === 0) { $('permNote').textContent = 'Nothing to test.'; return; }
+  const r = rows.length, c = cols.length, N = xs.length;
+  const R = O.map(row => row.reduce((a, b) => a + b, 0)), Cs = cols.map((_, j) => O.reduce((a, row) => a + row[j], 0));
+  const E = new Float64Array(r * c);
+  for (let i = 0; i < r; i++) for (let j = 0; j < c; j++) E[i * c + j] = R[i] * Cs[j] / N;
+  const B = Math.max(200, Math.min(1000, Math.floor(2e7 / N)));
+  $('bTxt').textContent = fmtN(B);
+  const rnd = rng(S.seed * 31 + permSeed), xi = Int32Array.from(xs), fj = Int32Array.from(fs), sims = new Float64Array(B);
+  for (let b = 0; b < B; b++) {
+    for (let k = N - 1; k > 0; k--) { const m = Math.floor(rnd() * (k + 1)); const t = fj[k]; fj[k] = fj[m]; fj[m] = t; }
+    sims[b] = chiFixed(xi, fj, r, c, E);
+  }
+  const ge = sims.filter(v => v >= A.chi - 1e-9).length, pPerm = (ge + 1) / (B + 1);
+  const overCrit = sims.filter(v => v >= A.crit).length / B;
+  const mean = sims.reduce((a, b) => a + b, 0) / B;
+
+  const df = A.df, xmax = Math.max(df + 5 * Math.sqrt(2 * df), A.crit * 1.4, ...[...sims].sort((a, b) => a - b).slice(Math.floor(B * 0.995)));
+  const bins = 40, w = xmax / bins, h = new Array(bins).fill(0);
+  sims.forEach(v => { const k = Math.min(bins - 1, Math.floor(v / w)); h[k]++; });
+  const dens = h.map(v => v / (B * w));
+  const pts = []; for (let i = 1; i <= 300; i++) { const x = xmax * i / 300; pts.push([x, chiPdf(x, df)]); }
+  const ymax = 1.15 * Math.max(...dens, ...pts.filter(q => q[0] > 0.5).map(q => q[1]));
+  const ch = chart($('cPerm'), { x: [0, xmax], y: [0, ymax], xl: 'χ²', yl: 'density' });
+  dens.forEach((v, k) => ch.rect(k * w + w * 0.06, (k + 1) * w - w * 0.06, 0, v, 'rgba(4,120,87,0.4)'));
+  ch.line(pts, C.ink, { w: 1.8 });
+  ch.vline(A.crit, C.red, true, 1.4);
+  if (A.chi <= xmax) ch.vline(A.chi, C.plum, false, 2.4);
+  else ch.label(`observed χ² = ${A.chi.toFixed(1)} →`, ch.X(xmax) - 4, 26, C.plum, 'right');
+
+  $('permKpi').innerHTML = `
+    <div><b>${fp(A.p)}</b>p-value from the χ² distribution</div>
+    <div><b>${ge === 0 ? '< ' + (1 / (B + 1)).toFixed(4) : pPerm.toFixed(4)}</b>p-value from the shuffles</div>
+    <div><b>${mean.toFixed(2)}</b>mean shuffled χ² (theory: df = ${df})</div>
+    <div><b>${pct(overCrit)}</b>shuffles above the critical value (theory: ${pct(alpha)})</div>`;
+  const agree = (A.p < alpha) === (pPerm < alpha);
+  $('permNote').innerHTML = `${ge} of ${fmtN(B)} shuffled tables have χ² ≥ ${A.chi.toFixed(2)}. ` +
+    (ge === 0 ? `None is as extreme as the real data, so the permutation p-value is below 1/${fmtN(B + 1)}. ` : '') +
+    `The histogram follows the χ²(${df}) curve ${A.low ? 'only roughly, because some expected counts are small' : 'well'}, and about ${pct(overCrit)} of the shuffles fall in the rejection region, close to α = ${alpha}. ` +
+    (agree ? 'The two tests give the same decision.' : '<b>Here the two tests disagree</b>: with small expected counts I trust the permutation test more.');
+  drawPower();
+}
+
+function drawPower() {
+  const { d, p, alpha, A } = S;
+  const df = A.df;
+  // φ² of the model: χ²/n in the population
+  const r = p.map(row => row.reduce((a, b) => a + b, 0)), c = p[0].map((_, j) => p.reduce((a, row) => a + row[j], 0));
+  let phi2 = 0;
+  p.forEach((row, i) => row.forEach((v, j) => { const e = r[i] * c[j]; if (e > 0) phi2 += (v - e) ** 2 / e; }));
+  const crit = chiCrit(alpha, df);
+  const ns = [30, 100, 300, 1000, 3000, 10000], reps = 200;
+  const rnd = rng(S.seed + 99), draw = sampler(p, rnd), rr = p.length, cc = p[0].length;
+  const out = ns.map(n => {
+    let sum = 0, rej = 0;
+    for (let s = 0; s < reps; s++) {
+      const O = Array.from({ length: rr }, () => new Array(cc).fill(0));
+      for (let k = 0; k < n; k++) { const [i, j] = draw(); O[i][j]++; }
+      const a = analyse(p.map((_, i) => i), p[0].map((_, j) => j), O, alpha);
+      sum += a.chi; if (a.df > 0 && a.p < alpha) rej++;
+    }
+    return { n, mean: sum / reps, power: rej / reps };
+  });
+  const line = []; for (let k = 0; k <= 60; k++) { const n = 30 * Math.pow(10000 / 30, k / 60); line.push([n, df + n * phi2]); }
+  const ys = [...out.map(o => o.mean), ...line.map(q => q[1]), crit];
+  const cN = chart($('cN'), { x: [30, 10000], y: [Math.max(0.5, Math.min(...ys) / 1.5), Math.max(...ys) * 1.5], logx: true, logy: true, xl: 'number of records n', yl: 'χ²' });
+  cN.hline(crit, C.red, true);
+  cN.line(line, C.ink, { dash: true, w: 1.3 });
+  cN.line(out.map(o => [o.n, o.mean]), C.plum, { dots: true, w: 2 });
+  $('powTbl').innerHTML = `<thead><tr><th class="m">n</th>${out.map(o => `<th class="m">${fmtN(o.n)}</th>`).join('')}</tr></thead><tbody>` +
+    `<tr><td>average χ²</td>${out.map(o => `<td class="m">${o.mean.toFixed(1)}</td>`).join('')}</tr>` +
+    `<tr><td>H₀ rejected</td>${out.map(o => `<td class="m ${o.power > 0.8 ? 'hit' : ''}">${pct(o.power)}</td>`).join('')}</tr>` +
+    `<tr><td>Cramér's V</td>${out.map(o => `<td class="m">${Math.sqrt(Math.max(0, o.mean - df) / (o.n * (Math.min(rr, cc) - 1))).toFixed(3)}</td>`).join('')}</tr></tbody>`;
+  const Vpop = Math.sqrt(phi2 / (Math.min(rr, cc) - 1));
+  const nNeed = phi2 > 0 ? Math.ceil((crit - df) / phi2) : Infinity;
+  $('powNote').innerHTML = phi2 < 1e-12
+    ? `In this model X and F are exactly independent (φ² = 0): the average χ² stays at about df = ${df} for every n and H₀ is rejected about ${pct(alpha)} of the time, which is just the significance level (false positives).`
+    : `With the same proportions (population Cramér's V = ${Vpop.toFixed(3)}), χ² grows linearly with n. Already from about n ≈ ${fmtN(Math.max(1, nNeed))} the expected χ² passes the critical value. So the p-value depends on the size of the dataset, while V (bottom row, corrected for the df) stays about the same: it measures the strength, χ² measures the evidence.`;
+}
+
+/* ===================================================================
+   Tab 6
+   =================================================================== */
+const SIMPSON = {
+  srv: { name: 'Internet-facing servers', yes: [120, 680], no: [50, 150] },
+  lap: { name: 'Internal laptops', yes: [6, 294], no: [60, 1140] }
+};
+function tbl2(title, yes, no, alpha) {
+  const a = analyse(['EDR', 'No EDR'], ['Compromised', 'Not compromised'], [yes, no], alpha);
+  const rate = v => pct(v[0] / (v[0] + v[1]));
+  return {
+    a, html: `<thead><tr><th>${esc(title)}</th><th class="m">Compromised</th><th class="m">Not compromised</th><th class="m">rate</th></tr></thead><tbody>` +
+      `<tr><td>EDR</td><td class="m">${fmtN(yes[0])}</td><td class="m">${fmtN(yes[1])}</td><td class="m"><b>${rate(yes)}</b></td></tr>` +
+      `<tr><td>No EDR</td><td class="m">${fmtN(no[0])}</td><td class="m">${fmtN(no[1])}</td><td class="m"><b>${rate(no)}</b></td></tr>` +
+      `<tr class="tot"><td colspan="4">χ² = ${a.chi.toFixed(2)}, df = 1, p = ${fp(a.p)}</td></tr></tbody>`
+  };
+}
+function drawCause() {
+  const { alpha } = S, s = SIMPSON.srv, l = SIMPSON.lap;
+  const yes = [s.yes[0] + l.yes[0], s.yes[1] + l.yes[1]], no = [s.no[0] + l.no[0], s.no[1] + l.no[1]];
+  const all = tbl2('All machines', yes, no, alpha), ts = tbl2(s.name, s.yes, s.no, alpha), tl = tbl2(l.name, l.yes, l.no, alpha);
+  $('simTbl').innerHTML = all.html; $('simS').innerHTML = ts.html; $('simL').innerHTML = tl.html;
+  const r = v => pct(v[0] / (v[0] + v[1]));
+  $('simNote1').innerHTML = `Machines with the EDR are compromised more often (${r(yes)} vs ${r(no)}), and the χ² test says the difference is significant (p = ${fp(all.a.p)}). Should we conclude that the EDR <i>causes</i> compromises and remove it?`;
+  $('simNote2').innerHTML = `No: inside each group the EDR is associated with <b>fewer</b> compromises (servers ${r(s.yes)} vs ${r(s.no)}, laptops ${r(l.yes)} vs ${r(l.no)}). The overall result is reversed because most EDRs are on servers (${fmtN(s.yes[0] + s.yes[1])} of ${fmtN(yes[0] + yes[1])}), and servers are attacked much more than laptops. This is Simpson's paradox: the type of machine is a <b>confounder</b>. ` +
+    `Since the two groups are separate samples, their statistics can be added into a test of independence <i>given</i> the type of machine: χ² = ${(ts.a.chi + tl.a.chi).toFixed(2)} with 2 df, p = ${fp(chiSf(ts.a.chi + tl.a.chi, 2))}. So EDR and compromise are dependent also within the groups, but in the opposite direction.`;
+
+  // conclusions on the four generated datasets (seed and n of the sidebar, default strength)
+  const rowsHtml = DATASETS.filter(d => !d.custom).map(d => {
+    const pm = model(d, d.lam / 100), draw = sampler(pm, rng(S.seed));
+    const O = d.rows.map(() => d.cols.map(() => 0));
+    for (let k = 0; k < S.n; k++) { const [i, j] = draw(); O[i][j]++; }
+    const a = analyse(d.rows, d.cols, O, alpha);
+    return `<tr class="${d === S.d ? 'sel' : ''}"><td>${esc(d.name)}</td><td class="m">${d.lam}%</td><td class="m">${a.chi.toFixed(2)}</td><td class="m">${a.df}</td><td class="m">${fp(a.p)}</td><td class="m">${a.V.toFixed(3)}</td><td class="m ${a.p < alpha ? 'miss' : 'hit'}">${a.p < alpha ? 'dependent' : 'not rejected'}</td></tr>`;
+  }).join('');
+  $('concTbl').innerHTML = `<thead><tr><th>Dataset (n = ${fmtN(S.n)}, seed ${S.seed})</th><th class="m">link</th><th class="m">χ²</th><th class="m">df</th><th class="m">p-value</th><th class="m">V</th><th class="m">at α = ${alpha}</th></tr></thead><tbody>${rowsHtml}</tbody>`;
+  const A = S.A;
+  $('concList').innerHTML = [
+    `The contingency table, the marginal and conditional frequencies and the expected counts Eᵢⱼ = nᵢ·n·ⱼ/n are all computed directly from the records.`,
+    `For the selected dataset χ² = ${A.chi.toFixed(2)} with ${A.df} df and p = ${fp(A.p)}: ${A.p < alpha ? 'X and F are statistically dependent' : 'independence cannot be rejected'} at α = ${alpha}${A.p < alpha ? `, with a ${A.V < 0.1 ? 'very weak' : A.V < 0.2 ? 'weak' : A.V < 0.35 ? 'moderate' : 'strong'} association (V = ${A.V.toFixed(3)})` : ''}.`,
+    `The permutation test confirms the χ² approximation when the expected counts are not too small, and replaces it when they are.`,
+    `A rejected H₀ tells me that the variables are associated, not why. In the SOC data, for example, the attack type does not "cause" the outcome by itself: the defences in place, the targets chosen by the attackers and how alerts are labelled all play a role.`
+  ].map(t => `<li>${t}</li>`).join('');
+}
+
+/* ===================================================================
+   Wiring
+   =================================================================== */
+const DRAW = { data: drawData, cond: drawCond, chi: drawChi, sim: drawSim, theory: () => {}, cause: drawCause };
+let active = 'data';
+function drawActive() { DRAW[active](); }
+function syncControls() {
+  const d = DATASETS[Number($('ds').value)];
+  ['n', 'seed', 'lam'].forEach(id => { $(id).disabled = !!d.custom; });
+  $('lamV').textContent = $('lam').value + '%';
+}
+function update() { syncControls(); compute(); drawActive(); }
+
+$('ds').onchange = () => {
+  const d = DATASETS[Number($('ds').value)];
+  if (!d.custom) $('lam').value = d.lam;
+  if (d.custom && active !== 'data') document.querySelector('.tab[data-t=data]').click();
+  update();
+};
+['n', 'seed', 'alpha'].forEach(id => { $(id).onchange = update; });
+$('lam').oninput = () => { $('lamV').textContent = $('lam').value + '%'; };
+$('lam').onchange = update;
+const HELP = {
+  rec: 'One record per line: the value of X and the value of F, separated by a comma (or ; or tab). The first line is the header with the names of the two variables. The categories are found automatically.',
+  tab: 'First line: the categories of F (starting with a comma). Then one line per category of X with its counts, separated by commas.'
+};
+function syncHelp() { $('customHelp').textContent = HELP[$('customFmt').value]; }
+$('customFmt').onchange = () => { syncHelp(); $('customTxt').value = $('customFmt').value === 'rec' ? EX_RECORDS : EX_TABLE; $('customMsg').textContent = ''; };
+$('customEx').onclick = () => { $('customTxt').value = $('customFmt').value === 'rec' ? EX_RECORDS : EX_TABLE; $('customBtn').click(); };
+$('customBtn').onclick = () => {
+  const res = parseCustom($('customTxt').value, $('customFmt').value);
+  if (res.err) { $('customMsg').textContent = res.err; $('customMsg').style.color = 'var(--red)'; return; }
+  custom = res.t;
+  const n = custom.counts.flat().reduce((a, b) => a + b, 0);
+  $('customMsg').textContent = `Read ${fmtN(n)} records, table ${custom.rows.length} × ${custom.cols.length}.`;
+  $('customMsg').style.color = 'var(--green)';
+  update();
+};
+// the records actually analysed, as a CSV file
+$('dlBtn').onclick = () => {
+  const { d, rows, cols, xs, fs } = S;
+  const csv = `id,${d.X},${d.F}\n` + xs.map((x, k) => `${k + 1},${rows[x]},${cols[fs[k]]}`).join('\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = `hw7-${d.id}-records.csv`; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+syncHelp();
+$('permBtn').onclick = () => { permSeed++; drawSim(); };
+
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t === b));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'p-' + b.dataset.t));
+  active = b.dataset.t;
+  drawActive();
+  window.scrollTo(0, 0);
+});
+let rt;
+window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(drawActive, 150); });
+
+update();
+})();
+</script>
+</body>
+</html>
