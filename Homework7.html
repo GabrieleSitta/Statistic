@@ -72,6 +72,7 @@ a.badge:hover { background: rgba(246, 247, 242, 0.1); }
 .ctl > label { display: grid; gap: 0.3rem; font-size: 0.85rem; font-weight: 600; color: rgba(246, 247, 242, 0.75); }
 .ctl .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
 .ctl .two label { display: grid; gap: 0.3rem; font-size: 0.85rem; font-weight: 600; color: rgba(246, 247, 242, 0.75); }
+.hint { font-size: 0.75rem; color: rgba(246, 247, 242, 0.55); line-height: 1.4; }
 .ctl .rangeval { font-family: var(--mono); color: var(--paper); float: right; }
 input[type=range] { width: 100%; accent-color: var(--plum-light); }
 
@@ -227,6 +228,7 @@ canvas.md { height: 250px; }
       <label>Strength of the link X–F <span class="rangeval" id="lamV">100%</span>
         <input type="range" id="lam" min="0" max="100" step="5" value="100">
       </label>
+      <p class="hint" id="simHint">Records, seed and strength are used only by the simulated dataset; real datasets are analysed as published.</p>
       <label>Significance level α
         <select id="alpha">
           <option value="0.1">0.10</option>
@@ -369,7 +371,7 @@ canvas.md { height: 250px; }
 
     <div class="card">
       <h2>How χ² depends on n</h2>
-      <p class="muted">Same proportions, more records. For each n I simulate 200 datasets from the model of the selected dataset (for "my own table": from its observed proportions) and record the average χ² and how often H₀ is rejected.</p>
+      <p class="muted">Same proportions, more records. For each n I simulate 200 datasets from the model of the selected dataset (for the real data and your own data: from the observed proportions, as if they were the population) and record the average χ² and how often H₀ is rejected.</p>
       <canvas class="ch l" id="cN" style="margin-top:.8rem"></canvas>
       <div class="legend"><span><span class="sw" style="background:var(--plum)"></span>average simulated χ²</span><span style="color:var(--ink)"><span class="sw dash"></span>approximation df + n·φ²</span><span><span class="sw dash" style="color:var(--red)"></span>critical value</span></div>
       <div class="scroll" style="margin-top:.6rem"><table id="powTbl"></table></div>
@@ -415,30 +417,34 @@ canvas.md { height: 250px; }
   <!-- ============ 6 · ASSOCIATION VS CAUSALITY ============ -->
   <section class="panel" id="p-cause">
     <div class="card">
-      <h2>An example: does an EDR agent cause compromises?</h2>
-      <p class="muted">Invented data on 2,500 machines of a company: whether they have an EDR (endpoint detection and response) agent, and whether they were compromised during the year.</p>
-      <div class="scroll" style="margin-top:.6rem"><table id="simTbl"></table></div>
-      <div class="note bad" id="simNote1"></div>
+      <h2>Kidney stones: which treatment works better?</h2>
+      <p class="muted">The 700 patients of Charig et al. (1986), all together.</p>
+      <div class="scroll" style="margin-top:.6rem"><table id="ksAll"></table></div>
+      <div class="note bad" id="ksNote1"></div>
     </div>
 
     <div class="card">
-      <h2>Splitting by type of machine</h2>
-      <p class="muted">The same 2,500 machines, separated into internet-facing servers and internal laptops.</p>
-      <div class="grid2" style="margin-top:.6rem">
-        <div class="scroll"><table id="simS"></table></div>
-        <div class="scroll"><table id="simL"></table></div>
-      </div>
-      <div class="note good" id="simNote2"></div>
+      <h2>Separating small and large stones</h2>
+      <p class="muted">The same patients, split by the size of the stone (below or above 2 cm).</p>
+      <div class="scroll" style="margin-top:.6rem"><table id="ksTbl"></table></div>
+      <div class="note good" id="ksNote2"></div>
+    </div>
+
+    <div class="card">
+      <h2>NSL-KDD: what does the association describe?</h2>
+      <p class="muted">The training and the test file of NSL-KDD, crossed with the label. If both files were random samples of the same traffic, the share of attacks should be about the same.</p>
+      <div class="scroll" style="margin-top:.6rem"><table id="kddSplit"></table></div>
+      <div class="note" id="kddNote"></div>
     </div>
 
     <div class="card disc">
       <h2>Association is not causation</h2>
       <ul>
-        <li><b>Confounding.</b> In the example the type of machine influences both variables: servers get the EDR more often and are attacked much more. Ignoring it, the association has the wrong sign (Simpson's paradox).</li>
-        <li><b>Direction.</b> The χ² test is symmetric in X and F: it says that the variables are linked, not which one influences the other.</li>
-        <li><b>Chance and multiple tests.</b> With α = 0.05, one test out of 20 rejects a true H₀. If many pairs of variables are tested, some "significant" associations are just noise.</li>
-        <li><b>Significant is not important.</b> With a lot of data even a tiny difference gives a small p-value (tab 4); Cramér's V and the conditional percentages say whether it matters.</li>
-        <li><b>What would show causality.</b> A controlled experiment (assigning the EDR at random, so that nothing else can differ between the groups), or at least an analysis that accounts for the confounders, a plausible mechanism and the right time order.</li>
+        <li><b>Confounding.</b> For the kidney stones, the size of the stone is linked both to the treatment (doctors chose open surgery for the difficult cases) and to the outcome (large stones fail more). Ignoring it, the comparison points the wrong way: Simpson's paradox.</li>
+        <li><b>Reverse direction.</b> In NSL-KDD the protocol does not "cause" the attack: it is the attack that determines the protocol (a smurf or ping flood is ICMP by definition, a password guess goes through TCP). The χ² test is symmetric in X and F and cannot tell the direction.</li>
+        <li><b>Selection.</b> The proportions in NSL-KDD are not those of real traffic: the records were selected by the authors from the 1998 DARPA simulation, also according to how difficult they are to classify. The association describes the dataset, and generalising it to a real network needs a real sample of that network.</li>
+        <li><b>Chance and size.</b> With α = 0.05, one test out of 20 rejects a true H₀; and with 125,973 records even a tiny difference is "significant" (tab 4). Cramér's V and the conditional percentages say whether it matters.</li>
+        <li><b>What would show causality.</b> A randomized experiment: assigning the treatment at random (so that large and small stones end up in both groups), or, in security, deploying a defence on a random half of the machines and comparing. Without it, the best we can do is account for the confounders we know, like the stone size.</li>
       </ul>
     </div>
 
@@ -460,6 +466,7 @@ const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 const fmtN = v => v.toLocaleString('en');
 const pct = v => (100 * v).toFixed(1) + '%';
 const f3 = v => Number.isFinite(v) ? v.toFixed(3) : '–';
+const pe = p => (fp(p).startsWith('<') ? '' : '= ') + fp(p);
 const fp = p => !Number.isFinite(p) ? '–' : p === 0 ? '< 1e-300' : p < 1e-4 ? p.toExponential(2) : p.toFixed(4);
 const sup = n => String(n).replace(/./g, c => '⁰¹²³⁴⁵⁶⁷⁸⁹'[c] || (c === '-' ? '⁻' : c));
 function rng(seed) {
@@ -589,30 +596,45 @@ function chiCrit(alpha, k) {                                          // x with 
 }
 
 /* ===================================================================
-   Datasets. q = "dependent" joint weights; the generator mixes it with
+   Datasets. The real ones are published contingency tables: the page
+   expands them into one record per unit and then rebuilds the table
+   from the records. The simulated one mixes a "dependent" table q with
    the product of its own marginals:  p = (1 − λ)·(row ⊗ col) + λ·q
    so that λ changes the link but not the marginal distributions.
    =================================================================== */
 const DATASETS = [
-  { id: 'soc', name: 'SOC alerts: attack type × outcome', X: 'attack type', F: 'outcome',
+  { id: 'kddProto', group: 'Real data', name: 'NSL-KDD: protocol × traffic class', X: 'protocol', F: 'traffic class', unit: 'connection',
+    rows: ['tcp', 'udp', 'icmp'], cols: ['normal', 'DoS', 'Probe', 'R2L', 'U2R'],
+    counts: [[53600, 42188, 5857, 995, 49], [12434, 892, 1664, 0, 3], [1309, 2847, 4135, 0, 0]],
+    src: 'NSL-KDD, training file KDDTrain+ (Canadian Institute for Cybersecurity, University of New Brunswick); M. Tavallaee, E. Bagheri, W. Lu, A. Ghorbani, “A detailed analysis of the KDD CUP 99 data set”, IEEE CISDA 2009. I counted the 125,973 lines of the file myself, grouping the attack names into the four families of the dataset.',
+    note: 'NSL-KDD is the classic benchmark for intrusion detection: every record is a network connection, labelled as normal traffic or as one of four attack families (DoS = denial of service, Probe = scanning, R2L = remote to local, U2R = user to root). Here X is the transport protocol and F the class. I expect a strong link: floods and scans often use ICMP, remote logins use TCP. U2R is very rare (52 connections), so a few expected counts are small.' },
+  { id: 'kddLogin', group: 'Real data', name: 'NSL-KDD: login status × label', X: 'login status', F: 'label', unit: 'connection',
+    rows: ['not logged in', 'logged in'], cols: ['normal', 'attack'],
+    counts: [[19486, 56635], [47857, 1995]],
+    src: 'NSL-KDD, KDDTrain+ (field logged_in); Tavallaee et al., IEEE CISDA 2009. Counts computed from the file.',
+    note: 'The same 125,973 connections in a 2 × 2 table: did the connection complete a successful login (X), and is it normal or an attack (F)? Most attacks in the dataset (floods, scans) never log in.' },
+  { id: 'kidney', group: 'Real data', name: 'Kidney stones: treatment × outcome', X: 'treatment', F: 'outcome', unit: 'patient',
+    rows: ['Open surgery', 'PCNL'], cols: ['Success', 'Failure'],
+    counts: [[273, 77], [289, 61]],
+    src: 'C. R. Charig, D. R. Webb, S. R. Payne, J. E. A. Wickham, “Comparison of treatment of renal calculi by open surgery, percutaneous nephrolithotomy, and extracorporeal shockwave lithotripsy”, British Medical Journal 292 (1986), 879–882.',
+    note: 'A real observational study on 700 patients: open surgery versus PCNL (percutaneous nephrolithotomy, a less invasive technique). Not a security dataset, but it is the cleanest real example I found of how a third variable can reverse an association: see tab 6.' },
+  { id: 'soc', group: 'Simulated (adjustable)', name: 'Simulated SOC alerts: attack type × outcome', X: 'attack type', F: 'outcome', unit: 'alert', sim: true,
     rows: ['Phishing', 'Brute force', 'Malware', 'Web exploit', 'DDoS'], cols: ['Blocked', 'Detected late', 'Breach'],
     q: [[180, 90, 30], [260, 30, 10], [120, 70, 35], [70, 45, 25], [140, 20, 5]], lam: 100,
-    note: 'Alerts of a security operations centre. For each alert: the type of attack (X) and how it ended (F). I expect a link: brute-force and DDoS are usually stopped automatically, while malware and web exploits more often end in a breach.' },
-  { id: 'mfa', name: 'Logins: time of day × MFA result', X: 'time of day', F: 'MFA result',
-    rows: ['Night 0–6', 'Morning 6–12', 'Afternoon 12–18', 'Evening 18–24'], cols: ['Passed', 'Failed', 'Not prompted'],
-    q: [[40, 22, 8], [300, 25, 35], [280, 20, 40], [150, 18, 22]], lam: 100,
-    note: 'Login events of a VPN gateway. X is the time slot of the login, F the result of the multi-factor authentication. Night logins are few but fail much more often (stolen credentials tried at night?).' },
-  { id: 'phi', name: 'Phishing drill: department × reaction', X: 'department', F: 'reaction',
-    rows: ['IT', 'Finance', 'HR', 'Sales'], cols: ['Clicked', 'Reported', 'Ignored'],
-    q: [[8, 55, 37], [18, 30, 52], [20, 28, 52], [22, 25, 53]], lam: 100,
-    note: 'A simulated phishing campaign sent to all employees. X is the department, F what the employee did with the email. The link is weaker: mainly IT reports more and clicks less. Try n = 60 and n = 1,200.' },
-  { id: 'os', name: 'Endpoints: OS × weekday/weekend', X: 'operating system', F: 'day',
-    rows: ['Windows', 'Linux', 'macOS'], cols: ['Weekday', 'Weekend'],
-    q: [[50, 15], [16, 9], [6, 4]], lam: 0,
-    note: 'Malware detections by operating system (X) and by type of day (F). Here the generator starts at link strength 0%, so X and F are independent by construction: the test should usually not reject H₀.' },
-  { id: 'custom', name: 'My own dataset (paste records or counts)', X: 'X', F: 'F', custom: true, note: 'Any bivariate categorical dataset: paste the raw records (one pair x, f per line) or a table of counts. The data are used as they are, so n, seed and strength are not used.' }
+    note: 'Invented alerts of a security operations centre, generated by the page, so I can control the link. With strength 100% brute-force and DDoS are usually blocked and malware more often ends in a breach; set the strength to 0% to get X and F independent by construction, and change n to see the effect of the sample size.' },
+  { id: 'custom', group: 'Your data', name: 'My own dataset (paste records or counts)', X: 'X', F: 'F', custom: true, note: 'Any bivariate categorical dataset: paste the raw records (one pair x, f per line) or a table of counts. The data are used as they are.' }
 ];
-DATASETS.forEach((d, i) => $('ds').insertAdjacentHTML('beforeend', `<option value="${i}">${esc(d.name)}</option>`));
+[...new Set(DATASETS.map(d => d.group))].forEach(g => {
+  $('ds').insertAdjacentHTML('beforeend', `<optgroup label="${esc(g)}">${DATASETS.map((d, i) => d.group === g ? `<option value="${i}">${esc(d.name)}</option>` : '').join('')}</optgroup>`);
+});
+// a published table → one record per unit, shuffled with a fixed seed (the order does not change any result)
+function expand(counts, seed) {
+  const xs = [], fs = [];
+  counts.forEach((r, i) => r.forEach((v, j) => { for (let k = 0; k < v; k++) { xs.push(i); fs.push(j); } }));
+  const rnd = rng(seed);
+  for (let k = xs.length - 1; k > 0; k--) { const m = Math.floor(rnd() * (k + 1)); [xs[k], xs[m]] = [xs[m], xs[k]]; [fs[k], fs[m]] = [fs[m], fs[k]]; }
+  return { xs, fs };
+}
 const EX_TABLE = `, Compromised, Not compromised
 VPN always on, 14, 486
 VPN sometimes, 22, 278
@@ -728,15 +750,14 @@ function compute() {
     ({ rows, cols } = custom);
     d.X = custom.X; d.F = custom.F;
     if (custom.xs) { xs = custom.xs.slice(); fs = custom.fs.slice(); }   // raw records: used in their order
-    else {
-      xs = []; fs = [];
-      custom.counts.forEach((r, i) => r.forEach((v, j) => { for (let k = 0; k < v; k++) { xs.push(i); fs.push(j); } }));
-      // a table of counts is expanded into records and shuffled, so the preview looks like a log
-      const rnd = rng(P.seed);
-      for (let k = xs.length - 1; k > 0; k--) { const m = Math.floor(rnd() * (k + 1)); [xs[k], xs[m]] = [xs[m], xs[k]]; [fs[k], fs[m]] = [fs[m], fs[k]]; }
-    }
+    else ({ xs, fs } = expand(custom.counts, 1973));
     const tot = xs.length;
     p = custom.counts.map(r => r.map(v => v / tot));
+  } else if (!d.sim) {
+    rows = d.rows; cols = d.cols;
+    ({ xs, fs } = expand(d.counts, 1973));
+    const tot = xs.length;
+    p = d.counts.map(r => r.map(v => v / tot));
   } else {
     rows = d.rows; cols = d.cols;
     p = model(d, P.lam);
@@ -763,12 +784,12 @@ function compute() {
 function drawData() {
   const { d, rows, cols, xs, fs, O, A, lam, n } = S;
   $('dsTitle').textContent = d.name;
-  $('dsNote').textContent = d.note;
+  $('dsNote').innerHTML = esc(d.note) + (d.src ? `<br><b>Source:</b> ${esc(d.src)}` : '');
   $('customCard').hidden = !d.custom;
   $('dsKpi').innerHTML = `
     <div><b>${fmtN(xs.length)}</b>records</div>
     <div><b>${rows.length} × ${cols.length}</b>categories of X × F</div>
-    <div><b>${d.custom ? '–' : Math.round(lam * 100) + '%'}</b>link strength used</div>
+    <div><b>${d.sim ? Math.round(lam * 100) + '%' : d.custom ? 'pasted' : 'real'}</b>${d.sim ? 'link strength used' : 'data'}</div>
     <div><b>${A.chi.toFixed(2)}</b>χ² (tab 3)</div>`;
 
   // raw records: first 10 lines of the "log"
@@ -778,16 +799,17 @@ function drawData() {
   for (let k = 0; k < shown; k++) {
     t += Math.floor(rnd() * 900 + 30) * 1000;
     const ts = new Date(t).toISOString().slice(5, 19).replace('T', ' ');
-    body += `<tr><td class="m">${k + 1}</td>${d.custom ? '' : `<td class="m">${ts}</td>`}<td>${esc(rows[xs[k]])}</td><td>${esc(cols[fs[k]])}</td></tr>`;
+    body += `<tr><td class="m">${k + 1}</td>${!d.sim ? '' : `<td class="m">${ts}</td>`}<td>${esc(rows[xs[k]])}</td><td>${esc(cols[fs[k]])}</td></tr>`;
   }
-  $('rawTbl').innerHTML = `<thead><tr><th class="m">#</th>${d.custom ? '' : '<th class="m">time</th>'}<th>X = ${esc(d.X)}</th><th>F = ${esc(d.F)}</th></tr></thead><tbody>${body}` +
-    (xs.length > shown ? `<tr><td class="m">…</td>${d.custom ? '' : '<td class="m">…</td>'}<td colspan="2" class="muted">${fmtN(xs.length - shown)} more records</td></tr>` : '') + '</tbody>';
+  $('rawTbl').innerHTML = `<thead><tr><th class="m">#</th>${!d.sim ? '' : '<th class="m">time</th>'}<th>X = ${esc(d.X)}</th><th>F = ${esc(d.F)}</th></tr></thead><tbody>${body}` +
+    (xs.length > shown ? `<tr><td class="m">…</td>${!d.sim ? '' : '<td class="m">…</td>'}<td colspan="2" class="muted">${fmtN(xs.length - shown)} more records</td></tr>` : '') + '</tbody>';
   $('rawCap').textContent = d.custom
     ? (custom.xs ? 'The records as you pasted them.' : 'The table of counts is expanded into one record per case, then shuffled.')
-    : `Generated with seed ${S.seed}: each record is a random pair (x, f) drawn from the model of the dataset.`;
+    : d.sim ? `Generated with seed ${S.seed}: each record is a random pair (x, f) drawn from the model of the dataset.`
+    : `The published table is expanded into one record per ${d.unit} (${fmtN(xs.length)} records) and shuffled. From here on the code only sees this list, as with any raw dataset.`;
 
   $('code').innerHTML =
-`<span class="dim">// records = [{ x: 'Phishing', f: 'Blocked' }, …]</span>
+`<span class="dim">// records = [{ x: 'tcp', f: 'DoS' }, …]</span>
 <span class="hl">const</span> rowIdx = <span class="hl">new</span> Map(rows.map((r, i) =&gt; [r, i]));
 <span class="hl">const</span> colIdx = <span class="hl">new</span> Map(cols.map((c, j) =&gt; [c, j]));
 <span class="hl">const</span> table = rows.map(() =&gt; cols.map(() =&gt; 0));
@@ -846,7 +868,7 @@ function drawChi() {
     rows.map((r, i) => `<tr><td>${esc(r)}</td>${E[i].map((e, j) => `<td class="m ${e < 5 ? 'low' : ''}">${e.toFixed(2)}<small>O = ${fmtN(T[i][j])}</small></td>`).join('')}<td class="m tot">${fmtN(A.R[i])}</td></tr>`).join('') +
     `<tr class="tot"><td>n·ⱼ</td>${A.Cs.map(v => `<td class="m">${fmtN(v)}</td>`).join('')}<td class="m">${fmtN(n)}</td></tr></tbody>`;
   $('expNote').innerHTML = (low === 0 ? 'All expected counts are at least 5, so the χ² approximation is fine.'
-    : `<b style="color:var(--red)">${low} of ${cells} cells have E &lt; 5.</b> The χ² p-value is only approximate here; the permutation test in tab 4 does not need this condition.`) +
+    : `<b style="color:var(--red)">${low} of ${cells} cells ${low === 1 ? 'has' : 'have'} E &lt; 5.</b> The χ² p-value is only approximate here; the permutation test in tab 4 does not need this condition.`) +
     (dropped ? ` (${dropped} categor${dropped > 1 ? 'ies' : 'y'} with no records ${dropped > 1 ? 'were' : 'was'} removed.)` : '');
 
   const cmax = Math.max(...contrib.flat(), 1e-12);
@@ -883,8 +905,8 @@ function drawChi() {
   top.sort((a, b) => b[0] - a[0]);
   const strength = V < 0.1 ? 'very weak' : V < 0.2 ? 'weak' : V < 0.35 ? 'moderate' : 'strong';
   $('testNote').innerHTML = df === 0 ? 'With only one category for X or F there is nothing to test.' : dep
-    ? `χ² = ${chi.toFixed(2)} is larger than the critical value ${crit.toFixed(2)} (p = ${fp(p)} &lt; ${alpha}), so I <b>reject independence</b>: X and F are statistically dependent. Cramér's V = ${V.toFixed(3)} means a ${strength} association. ` + (top.length ? `The cells that contribute most: ${esc(top.slice(0, 3).map(t => t[1]).join('; '))}.` : '')
-    : `χ² = ${chi.toFixed(2)} is below the critical value ${crit.toFixed(2)} (p = ${fp(p)} ≥ ${alpha}), so I <b>cannot reject independence</b>: the differences between O and E are compatible with chance. This does not prove that X and F are independent; with more data a small link could still show up.`;
+    ? `χ² = ${chi.toFixed(2)} is larger than the critical value ${crit.toFixed(2)} (p ${pe(p)} &lt; ${alpha}), so I <b>reject independence</b>: X and F are statistically dependent. Cramér's V = ${V.toFixed(3)} means a ${strength} association. ` + (top.length ? `The cells that contribute most: ${esc(top.slice(0, 3).map(t => t[1]).join('; '))}.` : '')
+    : `χ² = ${chi.toFixed(2)} is below the critical value ${crit.toFixed(2)} (p ${pe(p)} ≥ ${alpha}), so I <b>cannot reject independence</b>: the differences between O and E are compatible with chance. This does not prove that X and F are independent; with more data a small link could still show up.`;
 }
 
 /* ===================================================================
@@ -982,45 +1004,65 @@ function drawPower() {
 /* ===================================================================
    Tab 6
    =================================================================== */
-const SIMPSON = {
-  srv: { name: 'Internet-facing servers', yes: [120, 680], no: [50, 150] },
-  lap: { name: 'Internal laptops', yes: [6, 294], no: [60, 1140] }
+// Charig et al. (1986): [success, failure] by treatment and stone size
+const KS = {
+  small: { name: 'Small stones (< 2 cm)', open: [81, 6], pcnl: [234, 36] },
+  large: { name: 'Large stones (≥ 2 cm)', open: [192, 71], pcnl: [55, 25] }
 };
-function tbl2(title, yes, no, alpha) {
-  const a = analyse(['EDR', 'No EDR'], ['Compromised', 'Not compromised'], [yes, no], alpha);
-  const rate = v => pct(v[0] / (v[0] + v[1]));
-  return {
-    a, html: `<thead><tr><th>${esc(title)}</th><th class="m">Compromised</th><th class="m">Not compromised</th><th class="m">rate</th></tr></thead><tbody>` +
-      `<tr><td>EDR</td><td class="m">${fmtN(yes[0])}</td><td class="m">${fmtN(yes[1])}</td><td class="m"><b>${rate(yes)}</b></td></tr>` +
-      `<tr><td>No EDR</td><td class="m">${fmtN(no[0])}</td><td class="m">${fmtN(no[1])}</td><td class="m"><b>${rate(no)}</b></td></tr>` +
-      `<tr class="tot"><td colspan="4">χ² = ${a.chi.toFixed(2)}, df = 1, p = ${fp(a.p)}</td></tr></tbody>`
-  };
-}
+// NSL-KDD: [normal, attack] in the two official files (counted from KDDTrain+.txt and KDDTest+.txt)
+const KDD_SPLIT = { 'KDDTrain+': [67343, 58630], 'KDDTest+': [9711, 12833] };
 function drawCause() {
-  const { alpha } = S, s = SIMPSON.srv, l = SIMPSON.lap;
-  const yes = [s.yes[0] + l.yes[0], s.yes[1] + l.yes[1]], no = [s.no[0] + l.no[0], s.no[1] + l.no[1]];
-  const all = tbl2('All machines', yes, no, alpha), ts = tbl2(s.name, s.yes, s.no, alpha), tl = tbl2(l.name, l.yes, l.no, alpha);
-  $('simTbl').innerHTML = all.html; $('simS').innerHTML = ts.html; $('simL').innerHTML = tl.html;
-  const r = v => pct(v[0] / (v[0] + v[1]));
-  $('simNote1').innerHTML = `Machines with the EDR are compromised more often (${r(yes)} vs ${r(no)}), and the χ² test says the difference is significant (p = ${fp(all.a.p)}). Should we conclude that the EDR <i>causes</i> compromises and remove it?`;
-  $('simNote2').innerHTML = `No: inside each group the EDR is associated with <b>fewer</b> compromises (servers ${r(s.yes)} vs ${r(s.no)}, laptops ${r(l.yes)} vs ${r(l.no)}). The overall result is reversed because most EDRs are on servers (${fmtN(s.yes[0] + s.yes[1])} of ${fmtN(yes[0] + yes[1])}), and servers are attacked much more than laptops. This is Simpson's paradox: the type of machine is a <b>confounder</b>. ` +
-    `Since the two groups are separate samples, their statistics can be added into a test of independence <i>given</i> the type of machine: χ² = ${(ts.a.chi + tl.a.chi).toFixed(2)} with 2 df, p = ${fp(chiSf(ts.a.chi + tl.a.chi, 2))}. So EDR and compromise are dependent also within the groups, but in the opposite direction.`;
+  const { alpha } = S;
+  const rate = v => v[0] / (v[0] + v[1]);
+  const pcls = p => p < alpha ? 'miss' : 'hit';
+  const OS = [KS.small.open[0] + KS.large.open[0], KS.small.open[1] + KS.large.open[1]];
+  const PC = [KS.small.pcnl[0] + KS.large.pcnl[0], KS.small.pcnl[1] + KS.large.pcnl[1]];
+  const all = analyse(['Open surgery', 'PCNL'], ['Success', 'Failure'], [OS, PC], alpha);
+  const twoRows = (rowsT, head) => `<thead><tr><th>${head}</th><th class="m">Success</th><th class="m">Failure</th><th class="m">patients</th><th class="m">success rate</th></tr></thead><tbody>` +
+    rowsT.map(([g, v]) => `<tr><td>${g}</td><td class="m">${v[0]}</td><td class="m">${v[1]}</td><td class="m">${v[0] + v[1]}</td><td class="m"><b>${pct(rate(v))}</b></td></tr>`).join('');
+  $('ksAll').innerHTML = twoRows([['Open surgery', OS], ['PCNL', PC]], 'All patients') +
+    `<tr class="tot"><td colspan="5">χ² = ${all.chi.toFixed(2)}, df = 1, p ${pe(all.p)}</td></tr></tbody>`;
+  $('ksNote1').innerHTML = `Overall PCNL looks better: ${pct(rate(PC))} of successes against ${pct(rate(OS))} for open surgery. The difference is not significant (p ${pe(all.p)}), but if I had to choose from this table I would pick PCNL.`;
 
-  // conclusions on the four generated datasets (seed and n of the sidebar, default strength)
+  const sm = analyse(['Open surgery', 'PCNL'], ['Success', 'Failure'], [KS.small.open, KS.small.pcnl], alpha);
+  const lg = analyse(['Open surgery', 'PCNL'], ['Success', 'Failure'], [KS.large.open, KS.large.pcnl], alpha);
+  // the confounder: stone size against treatment and against outcome
+  const sizeTreat = analyse(['small', 'large'], ['Open surgery', 'PCNL'], [[87, 270], [263, 80]], alpha);
+  const sizeOut = analyse(['small', 'large'], ['Success', 'Failure'], [[81 + 234, 6 + 36], [192 + 55, 71 + 25]], alpha);
+  $('ksTbl').innerHTML = `<thead><tr><th>Stone size</th><th class="m">open surgery</th><th class="m">PCNL</th><th class="m">better</th><th class="m">χ² (df 1)</th><th class="m">p-value</th></tr></thead><tbody>` +
+    [[KS.small, sm], [KS.large, lg]].map(([k, a]) => `<tr><td>${k.name}</td><td class="m">${pct(rate(k.open))} <span class="muted">(${k.open[0]}/${k.open[0] + k.open[1]})</span></td><td class="m">${pct(rate(k.pcnl))} <span class="muted">(${k.pcnl[0]}/${k.pcnl[0] + k.pcnl[1]})</span></td><td class="m"><b>${rate(k.open) > rate(k.pcnl) ? 'open surgery' : 'PCNL'}</b></td><td class="m">${a.chi.toFixed(2)}</td><td class="m ${pcls(a.p)}">${fp(a.p)}</td></tr>`).join('') +
+    `<tr><td>All patients</td><td class="m">${pct(rate(OS))}</td><td class="m">${pct(rate(PC))}</td><td class="m"><b>${rate(OS) > rate(PC) ? 'open surgery' : 'PCNL'}</b></td><td class="m">${all.chi.toFixed(2)}</td><td class="m ${pcls(all.p)}">${fp(all.p)}</td></tr></tbody>`;
+  $('ksNote2').innerHTML = `For <b>both</b> small and large stones open surgery has the higher success rate, yet overall it looks worse. The reason is the stone size: it is strongly linked to the treatment (${pct(263 / 350)} of the open-surgery patients had a large stone, against only ${pct(80 / 350)} of the PCNL patients; χ² = ${sizeTreat.chi.toFixed(1)}, p ${pe(sizeTreat.p)}) and to the outcome (success ${pct(315 / 357)} for small stones, ${pct(247 / 343)} for large; χ² = ${sizeOut.chi.toFixed(1)}, p ${pe(sizeOut.p)}). ` +
+    `Open surgery got the harder cases, so the pooled table mixes the effect of the treatment with the effect of the size. Note that none of the three treatment tests is significant: Simpson's paradox is about the <i>direction</i> of the comparison, and it can happen with any sample size.`;
+
+  const tr = KDD_SPLIT['KDDTrain+'], te = KDD_SPLIT['KDDTest+'];
+  const sp = analyse(['KDDTrain+', 'KDDTest+'], ['normal', 'attack'], [tr, te], alpha);
+  $('kddSplit').innerHTML = `<thead><tr><th>File</th><th class="m">normal</th><th class="m">attack</th><th class="m">connections</th><th class="m">share of attacks</th></tr></thead><tbody>` +
+    [['KDDTrain+', tr], ['KDDTest+', te]].map(([g, v]) => `<tr><td>${g}</td><td class="m">${fmtN(v[0])}</td><td class="m">${fmtN(v[1])}</td><td class="m">${fmtN(v[0] + v[1])}</td><td class="m"><b>${pct(v[1] / (v[0] + v[1]))}</b></td></tr>`).join('') +
+    `<tr class="tot"><td colspan="5">χ² = ${sp.chi.toFixed(1)}, df = 1, p ${pe(sp.p)}, Cramér's V = ${sp.V.toFixed(3)}</td></tr></tbody>`;
+  $('kddNote').innerHTML = `The two files are clearly not independent of the label: ${pct(tr[1] / (tr[0] + tr[1]))} of attacks in the training file, ${pct(te[1] / (te[0] + te[1]))} in the test file (which also contains attack types that never appear in training). This is by design: the authors built the files by selecting records, not by sampling a real network. So the strong link between protocol and class in tab 3 tells me how this benchmark was built, and real traffic would have very different proportions (far fewer attacks).`;
+
+  // summary of every dataset at the current settings
   const rowsHtml = DATASETS.filter(d => !d.custom).map(d => {
-    const pm = model(d, d.lam / 100), draw = sampler(pm, rng(S.seed));
-    const O = d.rows.map(() => d.cols.map(() => 0));
-    for (let k = 0; k < S.n; k++) { const [i, j] = draw(); O[i][j]++; }
+    let O, n;
+    if (d.sim) {
+      const draw = sampler(model(d, Number($('lam').value) / 100), rng(S.seed));
+      O = d.rows.map(() => d.cols.map(() => 0));
+      for (let k = 0; k < S.n; k++) { const [i, j] = draw(); O[i][j]++; }
+      n = S.n;
+    } else { O = d.counts; n = d.counts.flat().reduce((a, b) => a + b, 0); }
     const a = analyse(d.rows, d.cols, O, alpha);
-    return `<tr class="${d === S.d ? 'sel' : ''}"><td>${esc(d.name)}</td><td class="m">${d.lam}%</td><td class="m">${a.chi.toFixed(2)}</td><td class="m">${a.df}</td><td class="m">${fp(a.p)}</td><td class="m">${a.V.toFixed(3)}</td><td class="m ${a.p < alpha ? 'miss' : 'hit'}">${a.p < alpha ? 'dependent' : 'not rejected'}</td></tr>`;
+    return `<tr class="${d === S.d ? 'sel' : ''}"><td>${esc(d.name)}${d.sim ? ` <span class="muted">(n = ${fmtN(n)}, strength ${$('lam').value}%)</span>` : ''}</td><td class="m">${fmtN(n)}</td><td class="m">${a.rows.length} × ${a.cols.length}</td><td class="m">${a.chi.toFixed(2)}</td><td class="m">${a.df}</td><td class="m">${fp(a.p)}</td><td class="m">${a.V.toFixed(3)}</td><td class="m ${a.p < alpha ? 'miss' : 'hit'}">${a.p < alpha ? 'dependent' : 'not rejected'}</td></tr>`;
   }).join('');
-  $('concTbl').innerHTML = `<thead><tr><th>Dataset (n = ${fmtN(S.n)}, seed ${S.seed})</th><th class="m">link</th><th class="m">χ²</th><th class="m">df</th><th class="m">p-value</th><th class="m">V</th><th class="m">at α = ${alpha}</th></tr></thead><tbody>${rowsHtml}</tbody>`;
+  $('concTbl').innerHTML = `<thead><tr><th>Dataset</th><th class="m">n</th><th class="m">r × c</th><th class="m">χ²</th><th class="m">df</th><th class="m">p-value</th><th class="m">V</th><th class="m">at α = ${alpha}</th></tr></thead><tbody>${rowsHtml}</tbody>`;
   const A = S.A;
   $('concList').innerHTML = [
-    `The contingency table, the marginal and conditional frequencies and the expected counts Eᵢⱼ = nᵢ·n·ⱼ/n are all computed directly from the records.`,
-    `For the selected dataset χ² = ${A.chi.toFixed(2)} with ${A.df} df and p = ${fp(A.p)}: ${A.p < alpha ? 'X and F are statistically dependent' : 'independence cannot be rejected'} at α = ${alpha}${A.p < alpha ? `, with a ${A.V < 0.1 ? 'very weak' : A.V < 0.2 ? 'weak' : A.V < 0.35 ? 'moderate' : 'strong'} association (V = ${A.V.toFixed(3)})` : ''}.`,
-    `The permutation test confirms the χ² approximation when the expected counts are not too small, and replaces it when they are.`,
-    `A rejected H₀ tells me that the variables are associated, not why. In the SOC data, for example, the attack type does not "cause" the outcome by itself: the defences in place, the targets chosen by the attackers and how alerts are labelled all play a role.`
+    `The contingency table, the marginal and conditional frequencies and the expected counts Eᵢⱼ = nᵢ·n·ⱼ/n are all computed from the individual records, also for the published datasets.`,
+    `For the selected dataset χ² = ${A.chi.toFixed(2)} with ${A.df} df and p ${pe(A.p)}: ${A.p < alpha ? 'X and F are statistically dependent' : 'independence cannot be rejected'} at α = ${alpha}${A.p < alpha ? `, with a ${A.V < 0.1 ? 'very weak' : A.V < 0.2 ? 'weak' : A.V < 0.35 ? 'moderate' : 'strong'} association (V = ${A.V.toFixed(3)})` : ''}.`,
+    `In NSL-KDD protocol and class, and login status and label, are strongly dependent (p practically 0, V ≈ ${analyse(DATASETS[0].rows, DATASETS[0].cols, DATASETS[0].counts, alpha).V.toFixed(2)} and ${analyse(DATASETS[1].rows, DATASETS[1].cols, DATASETS[1].counts, alpha).V.toFixed(2)}): the class of a connection changes a lot with its protocol and with whether it logged in.`,
+    `For the kidney stones independence of treatment and outcome is not rejected (p ${pe(all.p)}), and the direction of the difference even reverses once the stone size is considered.`,
+    `The simulated dataset with strength 0% is independent by construction: there the test does not reject H₀, except in about α of the cases (tab 4).`,
+    `A rejected H₀ says that the variables are associated, not why: confounders, reverse direction and selection (all present in these real data) can produce an association without a causal effect.`
   ].map(t => `<li>${t}</li>`).join('');
 }
 
@@ -1032,14 +1074,14 @@ let active = 'data';
 function drawActive() { DRAW[active](); }
 function syncControls() {
   const d = DATASETS[Number($('ds').value)];
-  ['n', 'seed', 'lam'].forEach(id => { $(id).disabled = !!d.custom; });
+  ['n', 'seed', 'lam'].forEach(id => { $(id).disabled = !d.sim; });
   $('lamV').textContent = $('lam').value + '%';
 }
 function update() { syncControls(); compute(); drawActive(); }
 
 $('ds').onchange = () => {
   const d = DATASETS[Number($('ds').value)];
-  if (!d.custom) $('lam').value = d.lam;
+  if (d.sim) $('lam').value = d.lam;
   if (d.custom && active !== 'data') document.querySelector('.tab[data-t=data]').click();
   update();
 };
